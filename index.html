@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tengo Vinos — Catálogo (simple, mobile-first)</title>
+  <style>
+    body{margin:0;background:#f6f0e8;color:#2b2b2b;font-family:system-ui,-apple-system,Roboto,Inter,Ubuntu,Arial,sans-serif}
+    .wrap{max-width:700px;margin:auto;padding:16px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:8px;position:sticky;top:0;background:#f6f0e8;padding:8px 0;z-index:2}
+    h1{margin:0;font-size:1.1rem;color:#6b2b2b}
+    input,select,button{padding:10px 12px;border-radius:10px;border:1px solid #d3c3b2;font-size:1rem}
+    input{flex:1}
+    button.primary{background:#6b2b2b;color:white;border:none;cursor:pointer}
+    button[disabled]{opacity:.5;cursor:not-allowed}
+    .grid{display:grid;grid-template-columns:1fr;gap:12px}
+    .card{background:#fff8f0;border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.06);display:flex;gap:10px}
+    .ph{width:110px;height:110px;background:#efe7db;display:grid;place-items:center;color:#6b2b2b;font-weight:600}
+    .card img{width:110px;height:110px;object-fit:cover}
+    .card .body{padding:10px 10px 10px 0;flex:1}
+    .name{font-weight:700;font-size:1rem;margin-bottom:2px}
+    .meta{color:#6b6b6b;font-size:.9rem;margin-bottom:4px}
+    .price{font-weight:800;color:#6b2b2b}
+    .qty{display:flex;align-items:center;gap:8px;margin-top:8px}
+    .qty button{width:32px;height:32px;border-radius:10px;border:1px solid #c3b9a8;background:#fff;cursor:pointer}
+    .cartbar{position:sticky;bottom:8px;display:flex;justify-content:space-between;align-items:center;background:#1f1b18;color:#fff;padding:12px 14px;border-radius:12px;margin-top:12px}
+    .muted{color:#6b6b6b;font-size:.85rem;margin-top:6px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Tengo Vinos</h1>
+      <input id="search" placeholder="Buscar: Malbec, bodega..." />
+      <select id="order">
+        <option value="name-asc">Nombre (A→Z)</option>
+        <option value="price-asc">Precio (↓)</option>
+        <option value="price-desc">Precio (↑)</option>
+      </select>
+    </header>
+
+    <div id="grid" class="grid" aria-live="polite"></div>
+
+    <div class="cartbar">
+      <div><strong id="cart-total">$0</strong> <span id="cart-items">(0)</span></div>
+      <div>
+        <button id="clear" disabled>Vaciar</button>
+        <button class="primary" id="whatsapp" disabled>Enviar por WhatsApp</button>
+      </div>
+    </div>
+    <div class="muted">No se cobra acá. Solo arma el pedido y lo manda a WhatsApp.</div>
+  </div>
+
+  <script>
+    // HARD-CODEADO POR AHORA — edítalo a gusto y después lo migramos a Google Sheets cuando quieras
+    var WHATSAPP_PHONE = "5492615760276";
+    var PRODUCTOS = [
+      {id:"1", nombre:"Budeguer Tucumén Reserva Malbec", bodega:"Budeguer", variedad:"Malbec", ml:750, precio:7500, foto:""},
+      {id:"2", nombre:"La Azul Malbec", bodega:"La Azul", variedad:"Malbec", ml:750, precio:7800, foto:""},
+      {id:"3", nombre:"Las Perdices Malbec", bodega:"Las Perdices", variedad:"Malbec", ml:750, precio:8500, foto:""},
+      {id:"4", nombre:"Mad Bird 2020", bodega:"Mad Bird", variedad:"Malbec", ml:750, precio:8600, foto:""},
+      {id:"5", nombre:"Tucumén Petit Verdot", bodega:"Budeguer", variedad:"Petit Verdot", ml:750, precio:9000, foto:""}
+    ];
+
+    var state = { rows: PRODUCTOS.slice(), filtered: PRODUCTOS.slice(), cart: {} };
+    function money(n){ return n.toLocaleString('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}); }
+
+    function render(){
+      var grid = document.getElementById('grid');
+      var html = '';
+      for(var i=0;i<state.filtered.length;i++){
+        var r = state.filtered[i];
+        html += "<div class='card'>"+
+          (r.foto? ("<img src='"+r.foto+"' alt='"+r.nombre+"'/>") : "<div class='ph'>FOTO</div>")+
+          "<div class='body'>"+
+            "<div class='name'>"+r.nombre+"</div>"+
+            "<div class='meta'>"+r.bodega+" · "+r.variedad+" · "+r.ml+" ml</div>"+
+            "<div class='price'>"+money(r.precio)+"</div>"+
+            "<div class='qty'>"+
+              "<button onclick=\"sub('"+r.id+"')\">−</button>"+
+              "<span>"+(state.cart[r.id]||0)+"</span>"+
+              "<button onclick=\"add('"+r.id+"')\">+</button>"+
+            "</div>"+
+          "</div>"+
+        "</div>";
+      }
+      grid.innerHTML = html;
+      renderCart();
+    }
+
+    function add(id){ state.cart[id] = (state.cart[id]||0) + 1; renderCart(); }
+    function sub(id){ if(state.cart[id]){ state.cart[id] = Math.max(0, state.cart[id]-1); if(!state.cart[id]) delete state.cart[id]; renderCart(); } }
+
+    function renderCart(){
+      var total=0, items=0;
+      for(var pid in state.cart){
+        var q = state.cart[pid];
+        var r = null;
+        for(var i=0;i<state.rows.length;i++){ if(state.rows[i].id===pid){ r=state.rows[i]; break; } }
+        if(!r) continue; total += q * r.precio; items += q;
+      }
+      document.getElementById('cart-total').textContent = money(total);
+      document.getElementById('cart-items').textContent = '('+items+')';
+      var hasItems = items>0;
+      document.getElementById('whatsapp').disabled = !hasItems;
+      document.getElementById('clear').disabled = !hasItems;
+    }
+
+    function buildWhatsAppText(){
+      var lines=['Hola! Quiero pedir estos vinos:',''];
+      var total=0;
+      for(var pid in state.cart){
+        var q = state.cart[pid];
+        var r=null; for(var i=0;i<state.rows.length;i++){ if(state.rows[i].id===pid){ r=state.rows[i]; break; } }
+        if(!r) continue; total += q*r.precio; lines.push('• '+r.nombre+' x'+q+' — '+money(r.precio));
+      }
+      lines.push('');
+      lines.push('Total: '+money(total));
+      return lines.join('\n'); // <- línea segura y válida
+    }
+
+    function sendWhatsApp(){
+      // Evitar navegación con carrito vacío
+      var empty = true; for(var k in state.cart){ empty=false; break; }
+      if(empty) return;
+      // Abrimos WhatsApp en la misma pestaña para evitar bloqueo de popups
+      var text = buildWhatsAppText();
+      location.href = 'https://wa.me/'+WHATSAPP_PHONE+'?text='+encodeURIComponent(text);
+    }
+
+    function applyFilters(){
+      var q = document.getElementById('search').value.trim().toLowerCase();
+      var order = document.getElementById('order').value;
+      var arr = [];
+      for(var i=0;i<state.rows.length;i++){
+        var r = state.rows[i];
+        var txt = (r.nombre+' '+r.bodega+' '+r.variedad).toLowerCase();
+        if(!q || txt.indexOf(q)>-1) arr.push(r);
+      }
+      if(order==='name-asc') arr.sort(function(a,b){ return a.nombre.localeCompare(b.nombre); });
+      if(order==='price-asc') arr.sort(function(a,b){ return a.precio-b.precio; });
+      if(order==='price-desc') arr.sort(function(a,b){ return b.precio-a.precio; });
+      state.filtered = arr; render();
+    }
+
+    document.getElementById('whatsapp').addEventListener('click',sendWhatsApp);
+    document.getElementById('clear').addEventListener('click',function(){ state.cart={}; renderCart(); });
+    document.getElementById('search').addEventListener('input',applyFilters);
+    document.getElementById('order').addEventListener('change',applyFilters);
+
+    render();
+
+    // =====================
+    // PRUEBAS BÁSICAS (console)
+    // =====================
+    (function runTests(){
+      try{
+        // Test 1: buildWhatsAppText incluye saltos de línea reales \n
+        state.cart = { '1':2, '3':1 };
+        var text = buildWhatsAppText();
+        console.assert(text.indexOf('\n')>-1, '[TEST1] Debe contener \n');
+        // Test 2: la URL codifica los \n como %0A
+        var url = 'https://wa.me/'+WHATSAPP_PHONE+'?text='+encodeURIComponent(text);
+        console.assert(url.indexOf('%0A')>-1, '[TEST2] Debe tener %0A');
+        // Restablecer estado
+        state.cart = {}; renderCart();
+        console.log('[OK] Tests mínimos pasaron');
+      }catch(e){ console.warn('Tests fallaron', e); }
+    })();
+  </script>
+</body>
+</html>
