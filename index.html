@@ -3,40 +3,843 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tengo Vinos — Catálogo (simple, mobile-first)</title>
+  <title>Tengo Vinos — Catálogo Premium</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  
   <style>
-    body{margin:0;background:#f6f0e8;color:#2b2b2b;font-family:system-ui,-apple-system,Roboto,Inter,Ubuntu,Arial,sans-serif}
-    .wrap{max-width:700px;margin:auto;padding:16px}
-    header{display:flex;align-items:center;justify-content:space-between;gap:8px;position:sticky;top:0;background:#f6f0e8;padding:8px 0;z-index:2}
-    h1{margin:0;font-size:1.1rem;color:#6b2b2b}
-    input,select,button{padding:10px 12px;border-radius:10px;border:1px solid #d3c3b2;font-size:1rem}
-    input{flex:1}
-    button.primary{background:#6b2b2b;color:white;border:none;cursor:pointer}
-    button[disabled]{opacity:.5;cursor:not-allowed}
-    .grid{display:grid;grid-template-columns:1fr;gap:12px}
-    .card{background:#fff8f0;border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.06);display:flex;gap:10px}
-    .ph{width:110px;height:110px;background:#efe7db;display:grid;place-items:center;color:#6b2b2b;font-weight:600}
-    .card img{width:110px;height:110px;object-fit:cover}
-    .card .body{padding:10px 10px 10px 0;flex:1}
-    .name{font-weight:700;font-size:1rem;margin-bottom:2px}
-    .meta{color:#6b6b6b;font-size:.9rem;margin-bottom:4px}
-    .price{font-weight:800;color:#6b2b2b}
-    .qty{display:flex;align-items:center;gap:8px;margin-top:8px}
-    .qty button{width:32px;height:32px;border-radius:10px;border:1px solid #c3b9a8;background:#fff;cursor:pointer}
-    .cartbar{position:sticky;bottom:8px;display:flex;justify-content:space-between;align-items:center;background:#1f1b18;color:#fff;padding:12px 14px;border-radius:12px;margin-top:12px}
-    .muted{color:#6b6b6b;font-size:.85rem;margin-top:6px}
+    :root{
+      --bg:#f6f0e8;
+      --ink:#2b2b2b;
+      --accent:#6b2b2b;
+      --muted:#6b6b6b;
+      --card:#fff8f0;
+      --stroke:#d3c3b2;
+    }
+    
+    *{box-sizing:border-box}
+    
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--ink);
+      font-family:'Montserrat',system-ui,-apple-system,Roboto,Inter,Ubuntu,Arial,sans-serif;
+    }
+    
+    .wrap{max-width:720px;margin:auto;padding:16px}
+    
+    header{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      position:sticky;
+      top:0;
+      background:var(--bg);
+      padding:10px 0;
+      z-index:2;
+      flex-wrap:wrap;
+    }
+    
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    
+    .brand img{
+      width:44px;
+      height:44px;
+      border-radius:12px;
+      object-fit:cover;
+      background:#efe7db;
+      border:1px solid #cbbba8;
+      box-shadow:0 1px 0 rgba(0,0,0,.04);
+    }
+    
+    h1{
+      margin:0;
+      font-size:1.25rem;
+      color:var(--accent);
+      font-weight:800;
+    }
+    
+    .sub{
+      font-size:.9rem;
+      color:var(--muted);
+      font-weight:500;
+    }
+    
+    .toolbar{
+      display:flex;
+      gap:8px;
+      flex:1;
+      justify-content:flex-end;
+      min-width:100%;
+    }
+    
+    @media(min-width:520px){
+      .toolbar{min-width:0}
+    }
+    
+    input,select,button{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--stroke);
+      font-size:1rem;
+      font-family:'Montserrat',sans-serif;
+      transition:all .15s ease;
+    }
+    
+    input{
+      flex:1;
+      min-width:130px;
+    }
+    
+    input:focus{
+      outline:none;
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(107,43,43,.1);
+    }
+    
+    select{
+      cursor:pointer;
+      font-weight:500;
+    }
+    
+    select:hover{
+      border-color:var(--accent);
+    }
+    
+    button.primary{
+      background:var(--accent);
+      color:white;
+      border:none;
+      cursor:pointer;
+      font-weight:700;
+      transition:transform .15s ease, box-shadow .15s ease;
+    }
+    
+    button.primary:hover:not([disabled]){
+      transform:translateY(-2px);
+      box-shadow:0 6px 18px rgba(107,43,43,.3);
+    }
+    
+    button.primary:active:not([disabled]){
+      transform:translateY(0);
+    }
+    
+    button[disabled]{
+      opacity:.6;
+      cursor:not-allowed;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+    }
+    
+    @media(min-width:520px){
+      .grid{grid-template-columns:1fr 1fr}
+    }
+    
+    .card{
+      background:var(--card);
+      border-radius:16px;
+      overflow:hidden;
+      box-shadow:0 1px 2px rgba(0,0,0,.06);
+      display:flex;
+      gap:12px;
+      padding:10px;
+      border:1px solid #eadfd1;
+      transition:transform .15s ease, box-shadow .15s ease;
+    }
+    
+    .card:hover{
+      transform:translateY(-2px);
+      box-shadow:0 6px 18px rgba(0,0,0,.08);
+    }
+    
+    .ph{
+      width:110px;
+      height:110px;
+      background:#efe7db;
+      display:grid;
+      place-items:center;
+      color:var(--accent);
+      font-weight:700;
+      border-radius:12px;
+      overflow:hidden;
+    }
+    
+    .thumb{
+      width:110px;
+      height:110px;
+      object-fit:cover;
+      border-radius:12px;
+      display:block;
+      transition:transform .3s ease, object-fit .3s ease;
+      cursor:pointer;
+    }
+    
+    .thumb:hover{
+      transform:scale(1.8);
+      object-fit:contain;
+      z-index:10;
+      position:relative;
+      box-shadow:0 8px 25px rgba(0,0,0,.3);
+    }
+    
+    .card .body{
+      padding:2px 0 0 0;
+      flex:1;
+      min-width:0;
+    }
+    
+    .name{
+      font-weight:700;
+      font-size:1rem;
+      margin-bottom:4px;
+    }
+    
+    .meta{
+      color:var(--muted);
+      font-size:.9rem;
+      margin-bottom:6px;
+    }
+    
+    .price{
+      font-weight:800;
+      color:var(--accent);
+    }
+    
+    .qty{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-top:8px;
+    }
+    
+    .qty .count{
+      font-weight:700;
+      min-width:18px;
+      text-align:center;
+    }
+    
+    .iconbtn{
+      width:40px;
+      height:40px;
+      border-radius:14px;
+      border:1px solid var(--stroke);
+      background:#fff;
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+      box-shadow:0 1px 0 rgba(0,0,0,.04);
+      transition:transform .1s ease, background .15s ease, border-color .15s ease;
+      font-size:1.2rem;
+      font-weight:600;
+      color:var(--ink);
+    }
+    
+    .iconbtn:active{
+      transform:scale(.94);
+    }
+    
+    .iconbtn:hover{
+      border-color:var(--accent);
+    }
+    
+    .iconbtn--plus{
+      background:var(--accent);
+      color:#fff;
+      border-color:var(--accent);
+    }
+    
+    .iconbtn--plus:hover{
+      background:#5a2424;
+    }
+    
+    .iconbtn--minus{
+      background:#fff;
+    }
+    
+    .cartbar{
+      position:sticky;
+      bottom:8px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      background:#1f1b18;
+      color:#fff;
+      padding:12px 14px;
+      border-radius:14px;
+      margin-top:14px;
+      box-shadow:0 4px 20px rgba(0,0,0,.2);
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    
+    .cartbar button{
+      transition:transform .15s ease, opacity .15s ease;
+    }
+    
+    .cartbar button:hover:not([disabled]){
+      transform:scale(1.05);
+    }
+    
+    .cartbar button:active:not([disabled]){
+      transform:scale(.98);
+    }
+    
+    .muted{
+      color:var(--muted);
+      font-size:.85rem;
+      margin-top:6px;
+    }
+
+    /* ===== BOTÓN AGREGAR VINO ===== */
+    .add-wine-btn{
+      background:linear-gradient(135deg, #28a745, #20c997);
+      color:white;
+      border:none;
+      padding:8px 16px;
+      border-radius:12px;
+      font-weight:600;
+      cursor:pointer;
+      transition:all .15s ease;
+      font-size:.9rem;
+    }
+    
+    .add-wine-btn:hover{
+      transform:translateY(-2px);
+      box-shadow:0 4px 12px rgba(40,167,69,.3);
+    }
+
+    /* ===== BOTÓN ADMINISTRACIÓN ===== */
+    .admin-btn{
+      background:linear-gradient(135deg, #6c757d, #495057);
+      color:white;
+      border:none;
+      padding:8px 16px;
+      border-radius:12px;
+      font-weight:600;
+      cursor:pointer;
+      transition:all .15s ease;
+      font-size:.9rem;
+    }
+    
+    .admin-btn:hover{
+      transform:translateY(-2px);
+      box-shadow:0 4px 12px rgba(108,117,125,.3);
+    }
+
+    /* ===== PANEL DE ADMINISTRACIÓN ===== */
+    .admin-modal-content{
+      max-width:800px;
+      width:95%;
+    }
+    
+    .admin-tabs{
+      display:flex;
+      gap:10px;
+      margin-bottom:20px;
+      border-bottom:2px solid #e0e0e0;
+    }
+    
+    .tab-btn{
+      background:none;
+      border:none;
+      padding:12px 20px;
+      cursor:pointer;
+      font-weight:600;
+      color:var(--muted);
+      border-bottom:3px solid transparent;
+      transition:all .15s ease;
+    }
+    
+    .tab-btn.active{
+      color:var(--accent);
+      border-bottom-color:var(--accent);
+    }
+    
+    .tab-btn:hover{
+      color:var(--accent);
+    }
+    
+    .admin-tab-content{
+      min-height:400px;
+    }
+    
+    .admin-actions{
+      display:flex;
+      gap:10px;
+      margin-bottom:20px;
+      flex-wrap:wrap;
+    }
+    
+    .btn-primary{
+      background:var(--accent);
+      color:white;
+      border:none;
+      padding:10px 20px;
+      border-radius:8px;
+      font-weight:600;
+      cursor:pointer;
+      transition:all .15s ease;
+    }
+    
+    .btn-primary:hover{
+      transform:translateY(-1px);
+      box-shadow:0 4px 12px rgba(107,43,43,.3);
+    }
+    
+    .btn-secondary{
+      background:#6c757d;
+      color:white;
+      border:none;
+      padding:10px 20px;
+      border-radius:8px;
+      font-weight:600;
+      cursor:pointer;
+      transition:all .15s ease;
+    }
+    
+    .btn-secondary:hover{
+      background:#5a6268;
+      transform:translateY(-1px);
+    }
+    
+    .wines-list{
+      max-height:400px;
+      overflow-y:auto;
+    }
+    
+    .wine-item{
+      display:flex;
+      align-items:center;
+      gap:15px;
+      padding:15px;
+      border:1px solid #e0e0e0;
+      border-radius:10px;
+      margin-bottom:10px;
+      background:#f8f9fa;
+    }
+    
+    .wine-item img{
+      width:60px;
+      height:60px;
+      object-fit:cover;
+      border-radius:8px;
+    }
+    
+    .wine-info{
+      flex:1;
+    }
+    
+    .wine-name{
+      font-weight:700;
+      margin-bottom:4px;
+    }
+    
+    .wine-meta{
+      color:var(--muted);
+      font-size:.9rem;
+      margin-bottom:4px;
+    }
+    
+    .wine-price{
+      font-weight:700;
+      color:var(--accent);
+    }
+    
+    .wine-actions{
+      display:flex;
+      gap:8px;
+    }
+    
+    .btn-edit{
+      background:#17a2b8;
+      color:white;
+      border:none;
+      padding:6px 12px;
+      border-radius:6px;
+      font-size:.8rem;
+      cursor:pointer;
+    }
+    
+    .btn-delete{
+      background:#dc3545;
+      color:white;
+      border:none;
+      padding:6px 12px;
+      border-radius:6px;
+      font-size:.8rem;
+      cursor:pointer;
+    }
+    
+    .btn-edit:hover{
+      background:#138496;
+    }
+    
+    .btn-delete:hover{
+      background:#c82333;
+    }
+
+    /* ===== MODAL ===== */
+    .modal{
+      display:none;
+      position:fixed;
+      z-index:1000;
+      left:0;
+      top:0;
+      width:100%;
+      height:100%;
+      background-color:rgba(0,0,0,.5);
+      backdrop-filter:blur(4px);
+    }
+    
+    .modal-content{
+      background:white;
+      margin:5% auto;
+      padding:0;
+      border-radius:20px;
+      width:90%;
+      max-width:500px;
+      box-shadow:0 20px 60px rgba(0,0,0,.3);
+      animation:modalSlideIn .3s ease;
+    }
+    
+    @keyframes modalSlideIn{
+      from{opacity:0;transform:translateY(-50px) scale(.9)}
+      to{opacity:1;transform:translateY(0) scale(1)}
+    }
+    
+    .modal-header{
+      background:linear-gradient(135deg, var(--accent), #8b3a3a);
+      color:white;
+      padding:20px;
+      border-radius:20px 20px 0 0;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    
+    .modal-header h2{
+      margin:0;
+      font-size:1.3rem;
+      font-weight:700;
+    }
+    
+    .close{
+      color:white;
+      font-size:28px;
+      font-weight:bold;
+      cursor:pointer;
+      transition:opacity .15s ease;
+    }
+    
+    .close:hover{
+      opacity:.7;
+    }
+    
+    #wine-form{
+      padding:25px;
+    }
+    
+    .form-group{
+      margin-bottom:20px;
+    }
+    
+    .form-row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:15px;
+    }
+    
+    .form-group label{
+      display:block;
+      margin-bottom:6px;
+      font-weight:600;
+      color:var(--ink);
+      font-size:.9rem;
+    }
+    
+    .form-group input,
+    .form-group select{
+      width:100%;
+      padding:12px;
+      border:2px solid #e0e0e0;
+      border-radius:10px;
+      font-size:1rem;
+      font-family:'Montserrat',sans-serif;
+      transition:border-color .15s ease, box-shadow .15s ease;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus{
+      outline:none;
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(107,43,43,.1);
+    }
+    
+    .form-group small{
+      display:block;
+      margin-top:4px;
+      color:var(--muted);
+      font-size:.8rem;
+    }
+    
+    .modal-actions{
+      display:flex;
+      gap:12px;
+      justify-content:flex-end;
+      margin-top:25px;
+    }
+    
+    .btn-cancel{
+      background:#f8f9fa;
+      color:var(--muted);
+      border:2px solid #e0e0e0;
+      padding:12px 24px;
+      border-radius:10px;
+      font-weight:600;
+      cursor:pointer;
+      transition:all .15s ease;
+    }
+    
+    .btn-cancel:hover{
+      background:#e9ecef;
+      border-color:#adb5bd;
+    }
+    
+    .btn-save{
+      background:linear-gradient(135deg, var(--accent), #8b3a3a);
+      color:white;
+      border:none;
+      padding:12px 24px;
+      border-radius:10px;
+      font-weight:600;
+      cursor:pointer;
+      transition:all .15s ease;
+    }
+    
+    .btn-save:hover{
+      transform:translateY(-1px);
+      box-shadow:0 4px 12px rgba(107,43,43,.3);
+    }
+
+    /* ===== MODAL DE IMAGEN ===== */
+    .image-modal-content{
+      background:transparent;
+      border:none;
+      box-shadow:none;
+      max-width:90vw;
+      max-height:90vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    
+    .image-modal-content img{
+      max-width:100%;
+      max-height:80vh;
+      object-fit:contain;
+      border-radius:15px;
+      box-shadow:0 20px 60px rgba(0,0,0,.5);
+    }
+    
+    #close-image{
+      position:absolute;
+      top:20px;
+      right:30px;
+      color:white;
+      font-size:40px;
+      font-weight:bold;
+      cursor:pointer;
+      z-index:1001;
+      text-shadow:0 2px 4px rgba(0,0,0,.5);
+    }
+    
+    #close-image:hover{
+      opacity:.8;
+    }
+
+    /* ===== CARRITO FLOTANTE ===== */
+    .floating-cart{
+      position:fixed;
+      top:50%;
+      right:20px;
+      transform:translateY(-50%);
+      z-index:100;
+      opacity:0;
+      visibility:hidden;
+      transition:all .3s ease;
+      cursor:pointer;
+    }
+    
+    .floating-cart.show{
+      opacity:1;
+      visibility:visible;
+    }
+    
+    .floating-cart-content{
+      background:linear-gradient(135deg, var(--accent), #8b3a3a);
+      color:white;
+      padding:12px 16px;
+      border-radius:20px;
+      box-shadow:0 8px 25px rgba(107,43,43,.4);
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:120px;
+      backdrop-filter:blur(10px);
+      border:2px solid rgba(255,255,255,.2);
+    }
+    
+    .floating-cart-icon{
+      font-size:1.5rem;
+      animation:bounce 2s infinite;
+    }
+    
+    .floating-cart-info{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+    }
+    
+    .floating-cart-items{
+      font-size:1.1rem;
+      font-weight:700;
+      line-height:1;
+    }
+    
+    .floating-cart-total{
+      font-size:.9rem;
+      font-weight:600;
+      opacity:.9;
+    }
+    
+    @keyframes bounce{
+      0%, 20%, 50%, 80%, 100%{transform:translateY(0)}
+      40%{transform:translateY(-3px)}
+      60%{transform:translateY(-2px)}
+    }
+    
+    @media(max-width:768px){
+      .floating-cart{
+        right:10px;
+        top:auto;
+        bottom:100px;
+        transform:none;
+      }
+      
+      .floating-cart-content{
+        padding:10px 14px;
+        min-width:100px;
+      }
+    }
+    
+    @media(max-width:600px){
+      .modal-content{
+        margin:10% auto;
+        width:95%;
+      }
+      
+      .form-row{
+        grid-template-columns:1fr;
+      }
+      
+      .modal-actions{
+        flex-direction:column;
+      }
+    }
+
+    /* ===== ANIMACIONES ===== */
+    @keyframes bump{
+      0%{transform:scale(1)}
+      30%{transform:scale(1.14)}
+      70%{transform:scale(.96)}
+      100%{transform:scale(1)}
+    }
+    
+    @keyframes pulse{
+      0%{box-shadow:0 0 0 0 rgba(107,43,43,.45)}
+      70%{box-shadow:0 0 0 14px rgba(107,43,43,0)}
+      100%{box-shadow:0 0 0 0 rgba(107,43,43,0)}
+    }
+    
+    @keyframes shake{
+      0%,100%{transform:translateX(0)}
+      25%{transform:translateX(-2px)}
+      75%{transform:translateX(2px)}
+    }
+    
+    @keyframes fadeIn{
+      from{opacity:0;transform:translateY(10px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+    
+    .anim-bump{
+      animation:bump .32s ease;
+    }
+    
+    .anim-pulse{
+      animation:pulse .6s ease;
+    }
+    
+    .anim-shake{
+      animation:shake .25s ease;
+    }
+    
+    .card{
+      animation:fadeIn .4s ease backwards;
+    }
+    
+    .card:nth-child(1){animation-delay:.05s}
+    .card:nth-child(2){animation-delay:.1s}
+    .card:nth-child(3){animation-delay:.15s}
+    .card:nth-child(4){animation-delay:.2s}
+    .card:nth-child(5){animation-delay:.25s}
+    
+    @media (prefers-reduced-motion: reduce){
+      .card,.iconbtn,button{transition:none}
+      .anim-bump,.anim-pulse,.anim-shake{animation:none}
+      .card{animation:none}
+    }
   </style>
 </head>
 <body>
+  <!-- Banner informativo de Firebase -->
+  <div id="firebase-warning" style="display:none; background:#ff6b6b; color:white; padding:15px; text-align:center; font-weight:bold;">
+    ⚠️ Firebase no configurado. Los cambios no se guardarán en la web. Lee <a href="CONFIGURAR-FIREBASE.md" style="color:white; text-decoration:underline;" target="_blank">CONFIGURAR-FIREBASE.md</a>
+  </div>
+  
   <div class="wrap">
     <header>
-      <h1>Tengo Vinos</h1>
-      <input id="search" placeholder="Buscar: Malbec, bodega..." />
-      <select id="order">
-        <option value="name-asc">Nombre (A→Z)</option>
-        <option value="price-asc">Precio (↓)</option>
-        <option value="price-desc">Precio (↑)</option>
-      </select>
+      <div class="brand">
+        <img src="img/logo1.png" alt="Tengo Vinos Logo" />
+        <div>
+          <h1>Tengo Vinos</h1>
+          <div class="sub">Catálogo Premium</div>
+        </div>
+      </div>
+      <div class="toolbar">
+        <input id="search" placeholder="Buscar: Malbec, bodega..." />
+        <select id="order">
+          <option value="name-asc">Nombre (A→Z)</option>
+          <option value="price-asc">Precio (↓)</option>
+          <option value="price-desc">Precio (↑)</option>
+        </select>
+      </div>
     </header>
 
     <div id="grid" class="grid" aria-live="polite"></div>
@@ -44,6 +847,8 @@
     <div class="cartbar">
       <div><strong id="cart-total">$0</strong> <span id="cart-items">(0)</span></div>
       <div>
+        <button id="admin-panel" class="admin-btn" style="display:none;">⚙️ Admin</button>
+        <button id="add-wine" class="add-wine-btn" style="display:none;">+ Agregar Vino</button>
         <button id="clear" disabled>Vaciar</button>
         <button class="primary" id="whatsapp" disabled>Enviar por WhatsApp</button>
       </div>
@@ -51,16 +856,272 @@
     <div class="muted">No se cobra acá. Solo arma el pedido y lo manda a WhatsApp.</div>
   </div>
 
+  <!-- Carrito Flotante -->
+  <div id="floating-cart" class="floating-cart" onclick="scrollToCart()">
+    <div class="floating-cart-content">
+      <div class="floating-cart-icon">🛒</div>
+      <div class="floating-cart-info">
+        <div class="floating-cart-items">0</div>
+        <div class="floating-cart-total">$0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para imagen del vino -->
+  <div id="image-modal" class="modal">
+    <div class="modal-content image-modal-content">
+      <span class="close" id="close-image">&times;</span>
+      <img id="modal-image" src="" alt="Imagen del vino" />
+    </div>
+  </div>
+
+  <!-- Modal de Administración -->
+  <div id="admin-modal" class="modal">
+    <div class="modal-content admin-modal-content">
+      <div class="modal-header">
+        <h2>⚙️ Panel de Administración</h2>
+        <span class="close" id="close-admin">&times;</span>
+      </div>
+      <div class="admin-tabs">
+        <button class="tab-btn active" onclick="showAdminTab('wines')">🍷 Vinos</button>
+        <button class="tab-btn" onclick="showAdminTab('settings')">⚙️ Configuración</button>
+      </div>
+      
+      <!-- Tab de Vinos -->
+      <div id="admin-wines" class="admin-tab-content">
+        <div class="admin-actions">
+          <button class="btn-primary" onclick="openAddWineModal()">+ Agregar Vino</button>
+          <button class="btn-secondary" onclick="exportWines()">📤 Exportar</button>
+          <button class="btn-secondary" onclick="importWines()">📥 Importar</button>
+          <button class="btn-secondary" onclick="resetToDefaults()" style="background:#e74c3c;">🔄 Restaurar Originales</button>
+        </div>
+        <div id="wines-list" class="wines-list">
+          <!-- Lista de vinos se genera dinámicamente -->
+        </div>
+      </div>
+      
+      <!-- Tab de Configuración -->
+      <div id="admin-settings" class="admin-tab-content" style="display:none;">
+        <div class="form-group">
+          <label for="admin-whatsapp">Número de WhatsApp</label>
+          <input type="text" id="admin-whatsapp" placeholder="5492615760276">
+        </div>
+        <div class="form-group">
+          <label for="admin-title">Título del Catálogo</label>
+          <input type="text" id="admin-title" placeholder="Tengo Vinos">
+        </div>
+        <div class="form-group">
+          <label for="admin-subtitle">Subtítulo</label>
+          <input type="text" id="admin-subtitle" placeholder="Catálogo Premium">
+        </div>
+        <div class="admin-actions">
+          <button class="btn-primary" onclick="saveSettings()">💾 Guardar Configuración</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para agregar/editar vino -->
+  <div id="wine-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🍷 Agregar Nuevo Vino</h2>
+        <span class="close">&times;</span>
+      </div>
+      <form id="wine-form">
+        <div class="form-group">
+          <label for="wine-name">Nombre del Vino *</label>
+          <input type="text" id="wine-name" required placeholder="Ej: Malbec Reserva 2023">
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="wine-bodega">Bodega *</label>
+            <input type="text" id="wine-bodega" required placeholder="Ej: Budeguer">
+          </div>
+          <div class="form-group">
+            <label for="wine-variedad">Variedad *</label>
+            <input type="text" id="wine-variedad" required placeholder="Ej: Malbec">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="wine-ml">Mililitros</label>
+            <select id="wine-ml">
+              <option value="375">375 ml</option>
+              <option value="750" selected>750 ml</option>
+              <option value="1000">1 L</option>
+              <option value="1500">1.5 L</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="wine-precio">Precio (ARS) *</label>
+            <input type="number" id="wine-precio" required placeholder="8000" min="0">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="wine-foto">URL de la Imagen (opcional)</label>
+          <input type="url" id="wine-foto" placeholder="https://ejemplo.com/imagen.jpg">
+          <small>Pega aquí la URL de la imagen del vino</small>
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="cancel-wine">Cancelar</button>
+          <button type="submit" class="btn-save">💾 Guardar Vino</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
-    // HARD-CODEADO POR AHORA — edítalo a gusto y después lo migramos a Google Sheets cuando quieras
+    // ===== CONFIGURACIÓN DE FIREBASE =====
+    // IMPORTANTE: Reemplaza esto con tu propia configuración de Firebase
+    // Ve a: https://console.firebase.google.com/
+    var firebaseConfig = {
+      apiKey: "AIzaSyDbb33vUlM75YEndsNYtYprH2Evqlmn77s",
+      authDomain: "catalogo-vinos-27f05.firebaseapp.com",
+      databaseURL: "https://catalogo-vinos-27f05-default-rtdb.firebaseio.com",
+      projectId: "catalogo-vinos-27f05",
+      storageBucket: "catalogo-vinos-27f05.firebasestorage.app",
+      messagingSenderId: "944813386819",
+      appId: "1:944813386819:web:b22c9d4eb5094e87c7b8f6"
+    };
+    
+    // Inicializar Firebase solo si está configurado
+    var useFirebase = firebaseConfig.apiKey !== "TU_API_KEY_AQUI";
+    var database = null;
+    
+    if(useFirebase){
+      try {
+        firebase.initializeApp(firebaseConfig);
+        database = firebase.database();
+        console.log('✅ Firebase conectado');
+      } catch(e){
+        console.error('❌ Error al conectar Firebase:', e);
+        useFirebase = false;
+      }
+    } else {
+      console.log('ℹ️ Firebase no configurado, usando datos locales');
+      // Mostrar banner de advertencia
+      document.getElementById('firebase-warning').style.display = 'block';
+    }
+    
+    // CATÁLOGO ACTUALIZADO - Edita precios y productos aquí
     var WHATSAPP_PHONE = "5492615760276";
     var PRODUCTOS = [
-      {id:"1", nombre:"Budeguer Tucumén Reserva Malbec", bodega:"Budeguer", variedad:"Malbec", ml:750, precio:7500, foto:""},
-      {id:"2", nombre:"La Azul Malbec", bodega:"La Azul", variedad:"Malbec", ml:750, precio:7800, foto:""},
-      {id:"3", nombre:"Las Perdices Malbec", bodega:"Las Perdices", variedad:"Malbec", ml:750, precio:8500, foto:""},
-      {id:"4", nombre:"Mad Bird 2020", bodega:"Mad Bird", variedad:"Malbec", ml:750, precio:8600, foto:""},
-      {id:"5", nombre:"Tucumén Petit Verdot", bodega:"Budeguer", variedad:"Petit Verdot", ml:750, precio:9000, foto:""}
+      // PREMIUM (más de $15000)
+      {id:"1", nombre:"Wayra Vineyard Selection Calyptra", bodega:"Wayra", variedad:"Cabernet Franc", ml:750, precio:20000, foto:""},
+      {id:"2", nombre:"Tucumén Malbec Bag in Box 3 Litros", bodega:"Budeguer", variedad:"Malbec", ml:3000, precio:18000, foto:"https://vinerialamision.com.ar/wp-content/uploads/2022/03/47E8F5AE-6945-4B88-BF8E-32F41670EE10-1200x1200.jpeg"},
+      {id:"3", nombre:"Budeguer 4000 Gran Reserva Black Blend", bodega:"Budeguer", variedad:"Black Blend", ml:750, precio:18000, foto:""},
+      {id:"4", nombre:"Mairena Reserva Familia Blanco Bonarda", bodega:"Mairena", variedad:"Bonarda", ml:750, precio:17000, foto:""},
+      {id:"5", nombre:"Mairena Reserva Familia Blanco Blend", bodega:"Mairena", variedad:"Blend", ml:750, precio:16500, foto:""},
+      {id:"6", nombre:"Prisma Penedo Borges Chardonnay 2023", bodega:"Penedo Borges", variedad:"Chardonnay", ml:750, precio:16500, foto:""},
+      {id:"7", nombre:"Prisma Penedo Borges Gran Malbec 2022", bodega:"Penedo Borges", variedad:"Malbec", ml:750, precio:16500, foto:""},
+      {id:"8", nombre:"Luna Llena Finca Ambrosia Gran Malbec 2023", bodega:"Luna Llena", variedad:"Malbec", ml:750, precio:15500, foto:""},
+      {id:"9", nombre:"El Turco Alto Cedro Malbec", bodega:"Alto Cedro", variedad:"Malbec", ml:750, precio:15500, foto:""},
+      
+      // GAMA MEDIA ($10000 - $15000)
+      {id:"10", nombre:"Cepas Penedo Borges Malbec", bodega:"Penedo Borges", variedad:"Malbec", ml:750, precio:12900, foto:""},
+      {id:"11", nombre:"Las Nencias Reserva Cabernet Sauvignon", bodega:"Las Nencias", variedad:"Cabernet Sauvignon", ml:750, precio:11000, foto:""},
+      {id:"12", nombre:"Budeguer 4000 Reserva 2023 Merlot", bodega:"Budeguer", variedad:"Merlot", ml:750, precio:10000, foto:""},
+      
+      // ACCESIBLES (menos de $10000)
+      {id:"13", nombre:"Budeguer Tucumén Reserva Petit Verdot", bodega:"Budeguer", variedad:"Petit Verdot", ml:750, precio:9500, foto:"https://vigilwineclub.com/images/product_image/1871/0?fit=fill&w=1024&h=512"},
+      {id:"14", nombre:"La Azul Sauvignon Blanc", bodega:"La Azul", variedad:"Sauvignon Blanc", ml:750, precio:9100, foto:"https://http2.mlstatic.com/D_NQ_NP_2X_725664-MLU73375985664_122023-F.webp"},
+      {id:"15", nombre:"Budeguer Tucumén Petit Verdot", bodega:"Budeguer", variedad:"Petit Verdot", ml:750, precio:9000, foto:""},
+      {id:"16", nombre:"Mad Bird", bodega:"Mad Bird", variedad:"Malbec", ml:750, precio:8600, foto:"https://http2.mlstatic.com/D_NQ_NP_775894-MLA54511914752_032023-O.webp"},
+      {id:"17", nombre:"Las Perdices Malbec", bodega:"Las Perdices", variedad:"Malbec", ml:750, precio:8500, foto:"https://http2.mlstatic.com/D_NQ_NP_842146-MLA44086476768_112020-O.webp"},
+      {id:"18", nombre:"La Azul Malbec", bodega:"La Azul", variedad:"Malbec", ml:750, precio:7800, foto:"https://http2.mlstatic.com/D_NQ_NP_980116-MLA53463423999_012023-O.webp"},
+      {id:"19", nombre:"Budeguer Tucumén Reserva Malbec", bodega:"Budeguer", variedad:"Malbec", ml:750, precio:7500, foto:"https://vigilwineclub.com/images/product_image/1871/0?fit=fill&w=1024&h=512"},
+      {id:"20", nombre:"Filo Sur", bodega:"Filo Sur", variedad:"Tinto", ml:750, precio:7000, foto:""},
+      {id:"21", nombre:"Don Bosco Reserva Malbec", bodega:"Don Bosco", variedad:"Malbec", ml:750, precio:6000, foto:""},
+      {id:"22", nombre:"Cuatro Monos Locos Malbec", bodega:"Cuatro Monos Locos", variedad:"Malbec", ml:750, precio:6000, foto:"https://www.alfonsadistribuidora.com.ar/database/articulo/fotos/5009/VINO%20CUATRO%20MONOS%20LOCOS%20MALBEC%20750CC__1.jpg"},
+      {id:"23", nombre:"Desdén Malbec Reserva", bodega:"Desdén", variedad:"Malbec", ml:750, precio:5500, foto:"https://solyvinomendoza.com/36965-superlarge_default_2x/vino-malbec-reserva-desden-750-ml.jpg"},
+      {id:"24", nombre:"Prófugo Casa La Primavera Chenin Dulce", bodega:"Casa La Primavera", variedad:"Chenin (Dulce)", ml:750, precio:5400, foto:"https://www.espaciovino.com.ar/media/default/0001/71/thumb_70638_default_big.jpeg"},
+      {id:"25", nombre:"Sensei Malbec Ahumado", bodega:"Sensei", variedad:"Malbec", ml:750, precio:5300, foto:"https://www.espaciovino.com.ar/media/default/0001/67/thumb_66447_default_big.jpeg"},
+      {id:"26", nombre:"Corbeau Wines Pixels Malbec", bodega:"Corbeau Wines", variedad:"Malbec", ml:750, precio:5200, foto:"https://dcdn-us.mitiendanube.com/stores/001/725/516/products/whatsapp-image-2023-05-04-at-11-30-101-4cd4a3c245ad1e464216832110653877-640-0.jpeg"}
     ];
+
+    // ===== FUNCIONES DE PERSISTENCIA CON FIREBASE =====
+    
+    // Cargar productos desde Firebase o usar los por defecto
+    function loadProductos(callback){
+      if(!useFirebase){
+        callback(PRODUCTOS);
+        return;
+      }
+      
+      database.ref('productos').once('value').then(function(snapshot){
+        var data = snapshot.val();
+        if(data && Array.isArray(data) && data.length > 0){
+          console.log('✅ Productos cargados desde Firebase');
+          callback(data);
+        } else {
+          console.log('ℹ️ No hay productos en Firebase, usando datos por defecto');
+          // Guardar productos por defecto en Firebase
+          saveProductos();
+          callback(PRODUCTOS);
+        }
+      }).catch(function(e){
+        console.error('❌ Error al cargar productos desde Firebase:', e);
+        callback(PRODUCTOS);
+      });
+    }
+    
+    // Guardar productos en Firebase
+    function saveProductos(){
+      if(!useFirebase){
+        console.log('ℹ️ Firebase no configurado, datos no guardados');
+        return;
+      }
+      
+      database.ref('productos').set(PRODUCTOS).then(function(){
+        console.log('✅ Productos guardados en Firebase');
+      }).catch(function(e){
+        console.error('❌ Error al guardar productos en Firebase:', e);
+      });
+    }
+    
+    // Cargar configuración desde Firebase
+    function loadConfig(){
+      if(!useFirebase){
+        return;
+      }
+      
+      database.ref('config').once('value').then(function(snapshot){
+        var config = snapshot.val();
+        if(config){
+          if(config.phone) WHATSAPP_PHONE = config.phone;
+          if(config.title) document.querySelector('h1').textContent = config.title;
+          if(config.subtitle) document.querySelector('.sub').textContent = config.subtitle;
+          console.log('✅ Configuración cargada desde Firebase');
+        }
+      }).catch(function(e){
+        console.error('❌ Error al cargar configuración desde Firebase:', e);
+      });
+    }
+    
+    // Guardar configuración en Firebase
+    function saveConfig(){
+      if(!useFirebase){
+        console.log('ℹ️ Firebase no configurado, configuración no guardada');
+        return;
+      }
+      
+      var config = {
+        phone: WHATSAPP_PHONE,
+        title: document.querySelector('h1').textContent,
+        subtitle: document.querySelector('.sub').textContent
+      };
+      
+      database.ref('config').set(config).then(function(){
+        console.log('✅ Configuración guardada en Firebase');
+      }).catch(function(e){
+        console.error('❌ Error al guardar configuración en Firebase:', e);
+      });
+    }
 
     var state = { rows: PRODUCTOS.slice(), filtered: PRODUCTOS.slice(), cart: {} };
     function money(n){ return n.toLocaleString('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}); }
@@ -71,15 +1132,15 @@
       for(var i=0;i<state.filtered.length;i++){
         var r = state.filtered[i];
         html += "<div class='card'>"+
-          (r.foto? ("<img src='"+r.foto+"' alt='"+r.nombre+"'/>") : "<div class='ph'>FOTO</div>")+
+          (r.foto? ("<img class='thumb' src='"+r.foto+"' alt='"+r.nombre+"' onclick='openImageModal(\""+r.foto+"\", \""+r.nombre+"\")'/>") : "<div class='ph'>🍷</div>")+
           "<div class='body'>"+
             "<div class='name'>"+r.nombre+"</div>"+
             "<div class='meta'>"+r.bodega+" · "+r.variedad+" · "+r.ml+" ml</div>"+
             "<div class='price'>"+money(r.precio)+"</div>"+
             "<div class='qty'>"+
-              "<button onclick=\"sub('"+r.id+"')\">−</button>"+
-              "<span>"+(state.cart[r.id]||0)+"</span>"+
-              "<button onclick=\"add('"+r.id+"')\">+</button>"+
+              "<button class='iconbtn iconbtn--minus' onclick=\"sub('"+r.id+"')\">−</button>"+
+              "<span class='count'>"+(state.cart[r.id]||0)+"</span>"+
+              "<button class='iconbtn iconbtn--plus' onclick=\"add('"+r.id+"')\">+</button>"+
             "</div>"+
           "</div>"+
         "</div>";
@@ -88,8 +1149,32 @@
       renderCart();
     }
 
-    function add(id){ state.cart[id] = (state.cart[id]||0) + 1; renderCart(); }
-    function sub(id){ if(state.cart[id]){ state.cart[id] = Math.max(0, state.cart[id]-1); if(!state.cart[id]) delete state.cart[id]; renderCart(); } }
+    function add(id){ 
+      state.cart[id] = (state.cart[id]||0) + 1; 
+      updateCartDisplay(id); // Solo actualizar el contador específico
+      renderCart();
+      // Animar el botón de WhatsApp
+      var btn = document.getElementById('whatsapp');
+      btn.classList.remove('anim-pulse');
+      setTimeout(function(){ btn.classList.add('anim-pulse'); }, 10);
+    }
+    
+    function sub(id){ 
+      if(state.cart[id]){ 
+        state.cart[id] = Math.max(0, state.cart[id]-1); 
+        if(!state.cart[id]) delete state.cart[id]; 
+        updateCartDisplay(id); // Solo actualizar el contador específico
+        renderCart();
+      } 
+    }
+
+    // Función para actualizar solo el contador de un producto específico
+    function updateCartDisplay(productId){
+      var countElement = document.querySelector('[onclick="sub(\''+productId+'\')"]').parentElement.querySelector('.count');
+      if(countElement){
+        countElement.textContent = state.cart[productId] || 0;
+      }
+    }
 
     function renderCart(){
       var total=0, items=0;
@@ -104,6 +1189,48 @@
       var hasItems = items>0;
       document.getElementById('whatsapp').disabled = !hasItems;
       document.getElementById('clear').disabled = !hasItems;
+      
+      // Actualizar carrito flotante
+      updateFloatingCart();
+    }
+
+    // Función para actualizar el carrito flotante
+    function updateFloatingCart(){
+      var floatingCart = document.getElementById('floating-cart');
+      var floatingItems = document.querySelector('.floating-cart-items');
+      var floatingTotal = document.querySelector('.floating-cart-total');
+      
+      var total=0, items=0;
+      for(var pid in state.cart){
+        var q = state.cart[pid];
+        var r = null;
+        for(var i=0;i<state.rows.length;i++){ 
+          if(state.rows[i].id===pid){ r=state.rows[i]; break; } 
+        }
+        if(!r) continue; 
+        total += q * r.precio; 
+        items += q;
+      }
+      
+      if(items > 0){
+        floatingItems.textContent = items;
+        floatingTotal.textContent = money(total);
+        floatingCart.classList.add('show');
+      } else {
+        floatingCart.classList.remove('show');
+      }
+    }
+
+    // Función para hacer scroll al carrito principal
+    function scrollToCart(){
+      var cartbar = document.querySelector('.cartbar');
+      cartbar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // Destacar el carrito por un momento
+      cartbar.style.background = 'linear-gradient(135deg, #8b3a3a, var(--accent))';
+      setTimeout(function(){
+        cartbar.style.background = '#1f1b18';
+      }, 1000);
     }
 
     function buildWhatsAppText(){
@@ -143,12 +1270,425 @@
       state.filtered = arr; render();
     }
 
-    document.getElementById('whatsapp').addEventListener('click',sendWhatsApp);
-    document.getElementById('clear').addEventListener('click',function(){ state.cart={}; renderCart(); });
+    document.getElementById('whatsapp').addEventListener('click',function(){
+      var btn = this;
+      btn.classList.add('anim-bump');
+      setTimeout(function(){ btn.classList.remove('anim-bump'); }, 320);
+      sendWhatsApp();
+    });
+    
+    document.getElementById('clear').addEventListener('click',function(){ 
+      var btn = this;
+      btn.classList.add('anim-shake');
+      setTimeout(function(){ btn.classList.remove('anim-shake'); }, 250);
+      state.cart={}; 
+      render(); 
+    });
+    
     document.getElementById('search').addEventListener('input',applyFilters);
     document.getElementById('order').addEventListener('change',applyFilters);
 
-    render();
+    // ===== EVENT LISTENERS PARA ADMINISTRACIÓN =====
+    document.getElementById('admin-panel').addEventListener('click', openAdminPanel);
+    document.getElementById('close-admin').addEventListener('click', closeAdminPanel);
+    
+    // Cerrar panel de admin al hacer click fuera
+    document.getElementById('admin-modal').addEventListener('click', function(event){
+      if(event.target == this){
+        closeAdminPanel();
+      }
+    });
+
+    // ===== FUNCIONALIDAD DEL MODAL DE IMAGEN =====
+    function openImageModal(imageSrc, wineName){
+      var imageModal = document.getElementById('image-modal');
+      var modalImage = document.getElementById('modal-image');
+      
+      modalImage.src = imageSrc;
+      modalImage.alt = wineName;
+      imageModal.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function closeImageModal(){
+      var imageModal = document.getElementById('image-modal');
+      imageModal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+    
+    // Event listeners para modal de imagen
+    document.getElementById('close-image').addEventListener('click', closeImageModal);
+    document.getElementById('image-modal').addEventListener('click', function(event){
+      if(event.target == this){
+        closeImageModal();
+      }
+    });
+    
+    // Cerrar con tecla Escape
+    document.addEventListener('keydown', function(event){
+      if(event.key === 'Escape'){
+        var imageModal = document.getElementById('image-modal');
+        var wineModal = document.getElementById('wine-modal');
+        if(imageModal.style.display === 'block'){
+          closeImageModal();
+        } else if(wineModal.style.display === 'block'){
+          closeModal();
+        }
+      }
+    });
+
+    // ===== DETECCIÓN DE ENTORNO LOCAL =====
+    function isLocalEnvironment(){
+      return window.location.hostname === 'localhost' || 
+             window.location.hostname === '127.0.0.1' || 
+             window.location.hostname === '0.0.0.0' ||
+             window.location.protocol === 'file:';
+    }
+
+    // Mostrar botones de administración solo en local
+    if(isLocalEnvironment()){
+      document.getElementById('admin-panel').style.display = 'inline-block';
+      document.getElementById('add-wine').style.display = 'inline-block';
+    }
+
+    // ===== FUNCIONALIDAD DEL PANEL DE ADMINISTRACIÓN =====
+    function openAdminPanel(){
+      var adminModal = document.getElementById('admin-modal');
+      adminModal.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      loadWinesList();
+      loadSettings();
+    }
+
+    function closeAdminPanel(){
+      var adminModal = document.getElementById('admin-modal');
+      adminModal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    function showAdminTab(tabName){
+      // Ocultar todos los tabs
+      document.querySelectorAll('.admin-tab-content').forEach(tab => {
+        tab.style.display = 'none';
+      });
+      
+      // Remover clase active de todos los botones
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Mostrar tab seleccionado
+      document.getElementById('admin-' + tabName).style.display = 'block';
+      
+      // Activar botón correspondiente
+      event.target.classList.add('active');
+    }
+
+    function loadWinesList(){
+      var winesList = document.getElementById('wines-list');
+      var html = '';
+      
+      for(var i = 0; i < PRODUCTOS.length; i++){
+        var wine = PRODUCTOS[i];
+        html += '<div class="wine-item">' +
+          '<img src="' + (wine.foto || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"><rect width="60" height="60" fill="%23efe7db"/><text x="30" y="35" text-anchor="middle" font-size="20">🍷</text></svg>') + '" alt="' + wine.nombre + '">' +
+          '<div class="wine-info">' +
+            '<div class="wine-name">' + wine.nombre + '</div>' +
+            '<div class="wine-meta">' + wine.bodega + ' · ' + wine.variedad + ' · ' + wine.ml + ' ml</div>' +
+            '<div class="wine-price">' + money(wine.precio) + '</div>' +
+          '</div>' +
+          '<div class="wine-actions">' +
+            '<button class="btn-edit" onclick="editWine(\'' + wine.id + '\')">✏️ Editar</button>' +
+            '<button class="btn-delete" onclick="deleteWine(\'' + wine.id + '\')">🗑️ Eliminar</button>' +
+          '</div>' +
+        '</div>';
+      }
+      
+      winesList.innerHTML = html;
+    }
+
+    function loadSettings(){
+      document.getElementById('admin-whatsapp').value = WHATSAPP_PHONE;
+      document.getElementById('admin-title').value = document.querySelector('h1').textContent;
+      document.getElementById('admin-subtitle').value = document.querySelector('.sub').textContent;
+    }
+
+    function saveSettings(){
+      WHATSAPP_PHONE = document.getElementById('admin-whatsapp').value;
+      document.querySelector('h1').textContent = document.getElementById('admin-title').value;
+      document.querySelector('.sub').textContent = document.getElementById('admin-subtitle').value;
+      
+      // Guardar en LocalStorage
+      saveConfig();
+      
+      alert('✅ Configuración guardada en LocalStorage');
+    }
+
+    function editWine(wineId){
+      var wine = PRODUCTOS.find(w => w.id == wineId);
+      if(!wine) return;
+      
+      // Llenar formulario con datos del vino
+      document.getElementById('wine-name').value = wine.nombre;
+      document.getElementById('wine-bodega').value = wine.bodega;
+      document.getElementById('wine-variedad').value = wine.variedad;
+      document.getElementById('wine-ml').value = wine.ml;
+      document.getElementById('wine-precio').value = wine.precio;
+      document.getElementById('wine-foto').value = wine.foto || '';
+      
+      // Cambiar título del modal
+      document.querySelector('#wine-modal .modal-header h2').textContent = '✏️ Editar Vino';
+      
+      // Abrir modal de vino
+      closeAdminPanel();
+      document.getElementById('wine-modal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      
+      // Guardar ID para actualización (como string para mantener consistencia)
+      window.editingWineId = String(wineId);
+    }
+
+    function deleteWine(wineId){
+      if(confirm('¿Estás seguro de que quieres eliminar este vino?')){
+        var index = PRODUCTOS.findIndex(w => w.id == wineId);
+        if(index > -1){
+          PRODUCTOS.splice(index, 1);
+          
+          // Guardar en LocalStorage
+          saveProductos();
+          
+          state.rows = PRODUCTOS.slice();
+          applyFilters();
+          loadWinesList();
+          alert('✅ Vino eliminado y guardado');
+        }
+      }
+    }
+
+    function openAddWineModal(){
+      // Limpiar formulario
+      document.getElementById('wine-form').reset();
+      
+      // Cambiar título del modal
+      document.querySelector('#wine-modal .modal-header h2').textContent = '🍷 Agregar Nuevo Vino';
+      
+      // Cerrar panel de admin y abrir modal de vino
+      closeAdminPanel();
+      document.getElementById('wine-modal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      
+      // Limpiar ID de edición
+      window.editingWineId = null;
+    }
+
+    function exportWines(){
+      var dataStr = JSON.stringify(PRODUCTOS, null, 2);
+      var dataBlob = new Blob([dataStr], {type: 'application/json'});
+      var url = URL.createObjectURL(dataBlob);
+      var link = document.createElement('a');
+      link.href = url;
+      link.download = 'vinos-backup.json';
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importWines(){
+      var input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = function(e){
+        var file = e.target.files[0];
+        if(file){
+          var reader = new FileReader();
+          reader.onload = function(e){
+            try{
+              var importedWines = JSON.parse(e.target.result);
+              if(Array.isArray(importedWines)){
+                PRODUCTOS = importedWines;
+                
+                // Guardar en LocalStorage
+                saveProductos();
+                
+                state.rows = PRODUCTOS.slice();
+                applyFilters();
+                loadWinesList();
+                alert('✅ Vinos importados y guardados correctamente');
+              } else {
+                alert('❌ Formato de archivo inválido');
+              }
+            } catch(error){
+              alert('❌ Error al importar archivo');
+            }
+          };
+          reader.readAsText(file);
+        }
+      };
+      input.click();
+    }
+
+    function resetToDefaults(){
+      if(confirm('⚠️ ¿Estás seguro de que quieres restaurar los productos originales? Esto eliminará todos los cambios que hayas hecho.')){
+        if(!useFirebase){
+          alert('ℹ️ Firebase no configurado. Recarga la página para volver a los productos originales.');
+          location.reload();
+          return;
+        }
+        
+        // Eliminar datos de Firebase
+        database.ref('productos').remove().then(function(){
+          database.ref('config').remove().then(function(){
+            alert('✅ Configuración restaurada. La página se recargará.');
+            location.reload();
+          });
+        }).catch(function(e){
+          console.error('❌ Error al restaurar configuración:', e);
+          alert('❌ Error al restaurar configuración');
+        });
+      }
+    }
+
+    // ===== FUNCIONALIDAD DEL MODAL =====
+    var modal = document.getElementById('wine-modal');
+    var addWineBtn = document.getElementById('add-wine');
+    var closeBtn = document.getElementsByClassName('close')[0];
+    var cancelBtn = document.getElementById('cancel-wine');
+    var wineForm = document.getElementById('wine-form');
+
+    // Abrir modal
+    addWineBtn.addEventListener('click', function(){
+      modal.style.display = 'block';
+      document.body.style.overflow = 'hidden'; // Prevenir scroll
+    });
+
+    // Cerrar modal
+    function closeModal(){
+      modal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+      wineForm.reset(); // Limpiar formulario
+      window.editingWineId = null; // Limpiar ID de edición
+    }
+
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+
+    // Cerrar al hacer click fuera del modal
+    window.addEventListener('click', function(event){
+      if(event.target == modal){
+        closeModal();
+      }
+    });
+
+    // Cerrar con tecla Escape
+    document.addEventListener('keydown', function(event){
+      if(event.key === 'Escape' && modal.style.display === 'block'){
+        closeModal();
+      }
+    });
+
+    // Manejar envío del formulario
+    wineForm.addEventListener('submit', function(e){
+      e.preventDefault();
+      
+      // Obtener datos del formulario
+      var nombre = document.getElementById('wine-name').value.trim();
+      var bodega = document.getElementById('wine-bodega').value.trim();
+      var variedad = document.getElementById('wine-variedad').value.trim();
+      var ml = parseInt(document.getElementById('wine-ml').value);
+      var precio = parseInt(document.getElementById('wine-precio').value);
+      var foto = document.getElementById('wine-foto').value.trim();
+
+      // Validar campos requeridos
+      if(!nombre || !bodega || !variedad || !precio){
+        alert('Por favor completa todos los campos obligatorios (*)');
+        return;
+      }
+
+      // Debug: verificar estado de edición
+      console.log('editingWineId:', window.editingWineId);
+      console.log('Tipo de editingWineId:', typeof window.editingWineId);
+      
+      // Verificar si es edición o nuevo vino
+      if(window.editingWineId){
+        // EDITAR VINO EXISTENTE
+        console.log('Intentando editar vino con ID:', window.editingWineId);
+        var wineIndex = PRODUCTOS.findIndex(w => w.id == window.editingWineId);
+        console.log('Índice encontrado:', wineIndex);
+        if(wineIndex > -1){
+          PRODUCTOS[wineIndex] = {
+            id: window.editingWineId,
+            nombre: nombre,
+            bodega: bodega,
+            variedad: variedad,
+            ml: ml,
+            precio: precio,
+            foto: foto
+          };
+          
+          // Guardar en LocalStorage
+          saveProductos();
+          
+          // Actualizar estado y renderizar
+          state.rows = PRODUCTOS.slice();
+          applyFilters();
+          
+          // Cerrar modal
+          closeModal();
+          
+          // Mostrar confirmación
+          alert('✅ ¡Vino editado y guardado exitosamente!');
+          
+          // Limpiar el ID de edición
+          window.editingWineId = null;
+        } else {
+          console.error('No se encontró el vino con ID:', window.editingWineId);
+          alert('❌ Error: No se encontró el vino a editar');
+          window.editingWineId = null;
+        }
+      } else {
+        // AGREGAR NUEVO VINO
+        console.log('Agregando nuevo vino');
+        var newId = (PRODUCTOS.length + 1).toString();
+
+        // Crear nuevo vino
+        var nuevoVino = {
+          id: newId,
+          nombre: nombre,
+          bodega: bodega,
+          variedad: variedad,
+          ml: ml,
+          precio: precio,
+          foto: foto
+        };
+
+        // Agregar a la lista
+        PRODUCTOS.push(nuevoVino);
+        
+        // Guardar en LocalStorage
+        saveProductos();
+        
+        // Actualizar estado y renderizar
+        state.rows = PRODUCTOS.slice();
+        applyFilters();
+        
+        // Cerrar modal
+        closeModal();
+        
+        // Mostrar confirmación
+        alert('✅ ¡Vino agregado exitosamente!');
+      }
+    });
+
+    // ===== INICIALIZACIÓN =====
+    // Cargar productos y configuración al iniciar
+    loadProductos(function(productos){
+      PRODUCTOS = productos;
+      state.rows = PRODUCTOS.slice();
+      state.filtered = PRODUCTOS.slice();
+      render();
+      
+      // Cargar configuración después de renderizar
+      loadConfig();
+    });
 
     // =====================
     // PRUEBAS BÁSICAS (console)

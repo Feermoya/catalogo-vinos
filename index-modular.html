@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tengo Vinos — Catálogo Premium</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <img src="img/logo1.png" alt="Tengo Vinos Logo" />
+        <div>
+          <h1>Tengo Vinos</h1>
+          <div class="sub">Catálogo Premium</div>
+        </div>
+      </div>
+      <div class="toolbar">
+        <input id="search" placeholder="Buscar: Malbec, bodega..." />
+        <select id="order">
+          <option value="name-asc">Nombre (A→Z)</option>
+          <option value="price-asc">Precio (↓)</option>
+          <option value="price-desc">Precio (↑)</option>
+        </select>
+      </div>
+    </header>
+
+    <div id="grid" class="grid" aria-live="polite"></div>
+
+    <div class="cartbar">
+      <div><strong id="cart-total">$0</strong> <span id="cart-items">(0)</span></div>
+      <div>
+        <button id="add-wine" class="add-wine-btn">+ Agregar Vino</button>
+        <button id="clear" disabled>Vaciar</button>
+        <button class="primary" id="whatsapp" disabled>Enviar por WhatsApp</button>
+      </div>
+    </div>
+    <div class="muted">No se cobra acá. Solo arma el pedido y lo manda a WhatsApp.</div>
+  </div>
+
+  <!-- Carrito Flotante -->
+  <div id="floating-cart" class="floating-cart" onclick="scrollToCart()">
+    <div class="floating-cart-content">
+      <div class="floating-cart-icon">🛒</div>
+      <div class="floating-cart-info">
+        <div class="floating-cart-items">0</div>
+        <div class="floating-cart-total">$0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para imagen del vino -->
+  <div id="image-modal" class="modal">
+    <div class="modal-content image-modal-content">
+      <span class="close" id="close-image">&times;</span>
+      <img id="modal-image" src="" alt="Imagen del vino" />
+    </div>
+  </div>
+
+  <!-- Modal para agregar vino -->
+  <div id="wine-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🍷 Agregar Nuevo Vino</h2>
+        <span class="close">&times;</span>
+      </div>
+      <form id="wine-form">
+        <div class="form-group">
+          <label for="wine-name">Nombre del Vino *</label>
+          <input type="text" id="wine-name" required placeholder="Ej: Malbec Reserva 2023">
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="wine-bodega">Bodega *</label>
+            <input type="text" id="wine-bodega" required placeholder="Ej: Budeguer">
+          </div>
+          <div class="form-group">
+            <label for="wine-variedad">Variedad *</label>
+            <input type="text" id="wine-variedad" required placeholder="Ej: Malbec">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="wine-ml">Mililitros</label>
+            <select id="wine-ml">
+              <option value="375">375 ml</option>
+              <option value="750" selected>750 ml</option>
+              <option value="1000">1 L</option>
+              <option value="1500">1.5 L</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="wine-precio">Precio (ARS) *</label>
+            <input type="number" id="wine-precio" required placeholder="8000" min="0">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="wine-foto">URL de la Imagen (opcional)</label>
+          <input type="url" id="wine-foto" placeholder="https://ejemplo.com/imagen.jpg">
+          <small>Pega aquí la URL de la imagen del vino</small>
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="cancel-wine">Cancelar</button>
+          <button type="submit" class="btn-save">💾 Guardar Vino</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts modulares -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/events.js"></script>
+  <script src="js/modal.js"></script>
+  <script src="js/imageModal.js"></script>
+  <script src="js/floatingCart.js"></script>
+  
+  <!-- Inicialización -->
+  <script>
+    // Inicializar la aplicación
+    initEvents();
+    initModal();
+    initImageModal();
+    render();
+    
+    // Tests básicos
+    (function runTests(){
+      try{
+        state.cart = { '1':2, '3':1 };
+        var text = buildWhatsAppText();
+        console.assert(text.indexOf('\n')>-1, '[TEST1] Debe contener \\n');
+        var url = 'https://wa.me/'+WHATSAPP_PHONE+'?text='+encodeURIComponent(text);
+        console.assert(url.indexOf('%0A')>-1, '[TEST2] Debe tener %0A');
+        state.cart = {}; renderCart();
+        console.log('[OK] Tests mínimos pasaron');
+      }catch(e){ console.warn('Tests fallaron', e); }
+    })();
+  </script>
+</body>
+</html>
