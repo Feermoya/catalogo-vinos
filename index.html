@@ -764,22 +764,220 @@
 
     /* ===== MODAL DE IMAGEN ===== */
     .image-modal-content{
-      background:transparent;
-      border:none;
-      box-shadow:none;
-      max-width:90vw;
-      max-height:90vh;
+      background:white;
+      border-radius:20px;
+      box-shadow:0 20px 60px rgba(0,0,0,.3);
+      max-width:95vw;
+      max-height:95vh;
+      width:1000px;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+    
+    .wine-detail-container{
+      display:flex;
+      min-height:500px;
+    }
+    
+    .wine-image-section{
+      flex:1;
+      background:linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
       display:flex;
       align-items:center;
       justify-content:center;
+      padding:40px;
     }
     
-    .image-modal-content img{
+    .wine-image-section img{
       max-width:100%;
-      max-height:80vh;
+      max-height:400px;
       object-fit:contain;
       border-radius:15px;
-      box-shadow:0 20px 60px rgba(0,0,0,.5);
+      box-shadow:0 10px 30px rgba(0,0,0,.2);
+    }
+    
+    .wine-info-section{
+      flex:1;
+      padding:40px;
+      overflow-y:auto;
+      display:flex;
+      flex-direction:column;
+      gap:20px;
+    }
+    
+    .wine-info-section h2{
+      margin:0 0 16px 0;
+      color:var(--accent);
+      font-size:24px;
+      font-weight:700;
+      line-height:1.3;
+    }
+    
+    .wine-details-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-bottom:20px;
+    }
+    
+    .wine-detail-item{
+      background:#f8f9fa;
+      padding:12px;
+      border-radius:8px;
+      border-left:3px solid var(--accent);
+    }
+    
+    .wine-detail-label{
+      font-size:12px;
+      color:var(--muted);
+      text-transform:uppercase;
+      font-weight:600;
+      margin-bottom:4px;
+    }
+    
+    .wine-detail-value{
+      font-size:14px;
+      color:var(--ink);
+      font-weight:500;
+    }
+    
+    .wine-description{
+      background:linear-gradient(135deg, #fff8f0 0%, #f6f0e8 100%);
+      padding:20px;
+      border-radius:12px;
+      border:1px solid #e9ecef;
+      line-height:1.6;
+      color:var(--ink);
+    }
+    
+    .wine-description p{
+      margin:0 0 16px 0;
+    }
+    
+    .wine-description p:last-child{
+      margin-bottom:0;
+    }
+    
+    /* Ocasiones */
+    .wine-ocasiones{
+      margin-top:20px;
+      padding-top:20px;
+      border-top:1px solid #e9ecef;
+    }
+    
+    .wine-ocasiones h4{
+      margin:0 0 12px 0;
+      color:var(--accent);
+      font-size:16px;
+      font-weight:600;
+    }
+    
+    .ocasiones-tags{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    
+    .ocasion-tag{
+      background:linear-gradient(135deg, #25D366 0%, #20BA5A 100%);
+      color:white;
+      padding:6px 12px;
+      border-radius:20px;
+      font-size:12px;
+      font-weight:500;
+      white-space:nowrap;
+    }
+    
+    /* Indicador de stock */
+    .stock-badge{
+      display:inline-block;
+      padding:3px 8px;
+      border-radius:8px;
+      font-size:10px;
+      font-weight:600;
+      text-transform:uppercase;
+      letter-spacing:0.3px;
+      margin-bottom:8px;
+    }
+    
+    .stock-available{
+      background:#25D366;
+      color:white;
+    }
+    
+    .stock-out{
+      background:#FF6B6B;
+      color:white;
+    }
+    
+    /* Descuentos */
+    .price-container{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin:12px 0;
+    }
+    
+    .discount-badge{
+      background:linear-gradient(135deg, #FF6B6B 0%, #EE5A52 100%);
+      color:white;
+      padding:4px 8px;
+      border-radius:8px;
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:0.5px;
+    }
+    
+    .price-wrapper{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    
+    .price-current{
+      font-size:20px;
+      font-weight:700;
+      color:var(--accent);
+    }
+    
+    .price-old{
+      font-size:14px;
+      color:#999;
+      text-decoration:line-through;
+    }
+    
+    /* Responsive para móviles */
+    @media (max-width: 768px) {
+      .wine-detail-container{
+        flex-direction:column;
+      }
+      
+      .wine-image-section{
+        padding:20px;
+        min-height:200px;
+      }
+      
+      .wine-image-section img{
+        max-height:200px;
+      }
+      
+      .wine-info-section{
+        padding:20px;
+      }
+      
+      .wine-info-section h2{
+        font-size:20px;
+      }
+      
+      .wine-details-grid{
+        grid-template-columns:1fr;
+      }
+      
+      .image-modal-content{
+        width:95vw;
+        max-height:90vh;
+      }
     }
     
     #close-image{
@@ -953,7 +1151,7 @@
       <div class="brand">
         <img src="img/logo1.png" alt="Tengo Vinos Logo" />
         <div>
-          <h1>Tengo Vinos</h1>
+      <h1>Tengo Vinos</h1>
           <div class="sub">Catálogo Premium</div>
           <div class="social-links">
             <a href="https://www.instagram.com/tengovinos/" target="_blank" class="instagram-link">
@@ -963,12 +1161,19 @@
         </div>
       </div>
       <div class="toolbar">
-        <input id="search" placeholder="Buscar: Malbec, bodega..." />
-        <select id="order">
-          <option value="name-asc">Nombre (A→Z)</option>
-          <option value="price-asc">Precio (↓)</option>
-          <option value="price-desc">Precio (↑)</option>
+        <select id="ocasion">
+          <option value="">🍷 ¿Para qué ocasión?</option>
+          <option value="Cena especial">💕 Cena especial</option>
+          <option value="Asado">🥩 Asado</option>
+          <option value="Almuerzo">🍽️ Almuerzo</option>
+          <option value="Aperitivo">🥂 Aperitivo</option>
+          <option value="Regalo">🎁 Regalo</option>
         </select>
+      <select id="order">
+        <option value="name-asc">Nombre (A→Z)</option>
+        <option value="price-asc">Precio (↓)</option>
+        <option value="price-desc">Precio (↑)</option>
+      </select>
       </div>
     </header>
 
@@ -1015,7 +1220,16 @@
   <div id="image-modal" class="modal">
     <div class="modal-content image-modal-content">
       <span class="close" id="close-image">&times;</span>
-      <img id="modal-image" src="" alt="Imagen del vino" />
+      <div class="wine-detail-container">
+        <div class="wine-image-section">
+          <img id="modal-image" src="" alt="Imagen del vino" />
+        </div>
+        <div class="wine-info-section">
+          <h2 id="modal-wine-name"></h2>
+          <div id="modal-wine-details"></div>
+          <div id="modal-wine-description"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1156,12 +1370,12 @@
     var WHATSAPP_PHONE = "5492615760276";
     var PRODUCTOS = [
       // PREMIUM (más de $15000)
-      {id:"1", nombre:"Wayra Vineyard Selection Calyptra", bodega:"Wayra", variedad:"Cabernet Franc", ml:750, precio:20000, foto:""},
-      {id:"2", nombre:"Tucumén Malbec Bag in Box 3 Litros", bodega:"Budeguer", variedad:"Malbec", ml:3000, precio:18000, foto:"https://vinerialamision.com.ar/wp-content/uploads/2022/03/47E8F5AE-6945-4B88-BF8E-32F41670EE10-1200x1200.jpeg"},
-      {id:"3", nombre:"Budeguer 4000 Gran Reserva Black Blend", bodega:"Budeguer", variedad:"Black Blend", ml:750, precio:18000, foto:""},
-      {id:"4", nombre:"Mairena Reserva Familia Blanco Bonarda", bodega:"Mairena", variedad:"Bonarda", ml:750, precio:17000, foto:""},
-      {id:"5", nombre:"Mairena Reserva Familia Blanco Blend", bodega:"Mairena", variedad:"Blend", ml:750, precio:16500, foto:""},
-      {id:"6", nombre:"Prisma Penedo Borges Chardonnay 2023", bodega:"Penedo Borges", variedad:"Chardonnay", ml:750, precio:16500, foto:""},
+      {id:"1", nombre:"Wayra Vineyard Selection Calyptra", bodega:"Wayra", variedad:"Cabernet Franc", ml:750, precio:20000, precioAnterior:22000, foto:""},
+      {id:"2", nombre:"Tucumén Malbec Bag in Box 3 Litros", bodega:"Budeguer", variedad:"Malbec", ml:3000, precio:18000, precioAnterior:19500, foto:"https://vinerialamision.com.ar/wp-content/uploads/2022/03/47E8F5AE-6945-4B88-BF8E-32F41670EE10-1200x1200.jpeg"},
+      {id:"3", nombre:"Budeguer 4000 Gran Reserva Black Blend", bodega:"Budeguer", variedad:"Black Blend", ml:750, precio:18000, precioAnterior:19500, foto:"", descripcion:"<p><strong>Composición:</strong> Tonos púrpura y rojos intensos. Aroma a especias, mezclándose con frutos rojos y negros ácidos, que se conjugan con café, moka, chocolate y regaliz.</p><p><strong>Paladar:</strong> Su boca es fresca, con taninos elegantes, suaves y sedosos.</p><p><strong>Composición varietal:</strong> 70% Malbec, 20% Cabernet Sauvignon y 10% Petit Verdot.</p><p><strong>Región:</strong> Agrelo, Chacayes.</p>", ocasiones:["Cena especial", "Regalo"], stock:true},
+      {id:"4", nombre:"Mairena Reserva Familia Blanco Bonarda", bodega:"Mairena", variedad:"Bonarda", ml:750, precio:17000, precioAnterior:18500, foto:""},
+      {id:"5", nombre:"Mairena Reserva Familia Blanco Blend", bodega:"Mairena", variedad:"Blend", ml:750, precio:16500, precioAnterior:18000, foto:""},
+      {id:"6", nombre:"Prisma Penedo Borges Chardonnay 2023", bodega:"Penedo Borges", variedad:"Chardonnay", ml:750, precio:16500, foto:"", ocasiones:["Almuerzo", "Aperitivo"], stock:true},
       {id:"7", nombre:"Prisma Penedo Borges Gran Malbec 2022", bodega:"Penedo Borges", variedad:"Malbec", ml:750, precio:16500, foto:""},
       {id:"8", nombre:"Luna Llena Finca Ambrosia Gran Malbec 2023", bodega:"Luna Llena", variedad:"Malbec", ml:750, precio:15500, foto:""},
       {id:"9", nombre:"El Turco Alto Cedro Malbec", bodega:"Alto Cedro", variedad:"Malbec", ml:750, precio:15500, foto:""},
@@ -1172,10 +1386,10 @@
       {id:"12", nombre:"Budeguer 4000 Reserva 2023 Merlot", bodega:"Budeguer", variedad:"Merlot", ml:750, precio:10000, foto:""},
       
       // ACCESIBLES (menos de $10000)
-      {id:"13", nombre:"Budeguer Tucumén Reserva Petit Verdot", bodega:"Budeguer", variedad:"Petit Verdot", ml:750, precio:9500, foto:"https://vigilwineclub.com/images/product_image/1871/0?fit=fill&w=1024&h=512"},
-      {id:"14", nombre:"La Azul Sauvignon Blanc", bodega:"La Azul", variedad:"Sauvignon Blanc", ml:750, precio:9100, foto:"https://http2.mlstatic.com/D_NQ_NP_2X_725664-MLU73375985664_122023-F.webp"},
+      {id:"13", nombre:"Budeguer Tucumén Reserva Petit Verdot", bodega:"Budeguer", variedad:"Petit Verdot", ml:750, precio:9500, foto:"https://vigilwineclub.com/images/product_image/1871/0?fit=fill&w=1024&h=512", descripcion:"<p><strong>Características:</strong> Un Petit Verdot de gran estructura y personalidad, con notas de violetas y especias.</p><p><strong>Maridaje:</strong> Perfecto con carnes rojas, cordero y quesos maduros.</p><p><strong>Servicio:</strong> Recomendado a 16-18°C.</p>", ocasiones:["Asado", "Almuerzo"], stock:false},
+      {id:"14", nombre:"La Azul Sauvignon Blanc", bodega:"La Azul", variedad:"Sauvignon Blanc", ml:750, precio:9100, precioAnterior:10500, foto:"https://http2.mlstatic.com/D_NQ_NP_2X_725664-MLU73375985664_122023-F.webp", stock:true},
       {id:"15", nombre:"Budeguer Tucumén Petit Verdot", bodega:"Budeguer", variedad:"Petit Verdot", ml:750, precio:9000, foto:""},
-      {id:"16", nombre:"Mad Bird", bodega:"Mad Bird", variedad:"Malbec", ml:750, precio:8600, foto:"https://http2.mlstatic.com/D_NQ_NP_775894-MLA54511914752_032023-O.webp"},
+      {id:"16", nombre:"Mad Bird", bodega:"Mad Bird", variedad:"Malbec", ml:750, precio:8600, foto:"https://http2.mlstatic.com/D_NQ_NP_775894-MLA54511914752_032023-O.webp", stock:false},
       {id:"17", nombre:"Las Perdices Malbec", bodega:"Las Perdices", variedad:"Malbec", ml:750, precio:8500, foto:"https://http2.mlstatic.com/D_NQ_NP_842146-MLA44086476768_112020-O.webp"},
       {id:"18", nombre:"La Azul Malbec", bodega:"La Azul", variedad:"Malbec", ml:750, precio:7800, foto:"https://http2.mlstatic.com/D_NQ_NP_980116-MLA53463423999_012023-O.webp"},
       {id:"19", nombre:"Budeguer Tucumén Reserva Malbec", bodega:"Budeguer", variedad:"Malbec", ml:750, precio:7500, foto:"https://vigilwineclub.com/images/product_image/1871/0?fit=fill&w=1024&h=512"},
@@ -1184,7 +1398,7 @@
       {id:"22", nombre:"Cuatro Monos Locos Malbec", bodega:"Cuatro Monos Locos", variedad:"Malbec", ml:750, precio:6000, foto:"https://www.alfonsadistribuidora.com.ar/database/articulo/fotos/5009/VINO%20CUATRO%20MONOS%20LOCOS%20MALBEC%20750CC__1.jpg"},
       {id:"23", nombre:"Desdén Malbec Reserva", bodega:"Desdén", variedad:"Malbec", ml:750, precio:5500, foto:"https://solyvinomendoza.com/36965-superlarge_default_2x/vino-malbec-reserva-desden-750-ml.jpg"},
       {id:"24", nombre:"Prófugo Casa La Primavera Chenin Dulce", bodega:"Casa La Primavera", variedad:"Chenin (Dulce)", ml:750, precio:5400, foto:"https://www.espaciovino.com.ar/media/default/0001/71/thumb_70638_default_big.jpeg"},
-      {id:"25", nombre:"Sensei Malbec Ahumado", bodega:"Sensei", variedad:"Malbec", ml:750, precio:5300, foto:"https://www.espaciovino.com.ar/media/default/0001/67/thumb_66447_default_big.jpeg"},
+      {id:"25", nombre:"Sensei Malbec Ahumado", bodega:"Sensei", variedad:"Malbec", ml:750, precio:5300, precioAnterior:6800, foto:"https://www.espaciovino.com.ar/media/default/0001/67/thumb_66447_default_big.jpeg", descripcion:"<p><strong>Características únicas:</strong> Un Malbec con notas ahumadas distintivas que lo hacen único en su estilo.</p><p><strong>Proceso especial:</strong> El ahumado le aporta complejidad y un carácter muy particular.</p><p><strong>Ideal para:</strong> Amantes de los vinos con personalidad marcada y sabores intensos.</p>"},
       {id:"26", nombre:"Corbeau Wines Pixels Malbec", bodega:"Corbeau Wines", variedad:"Malbec", ml:750, precio:5200, foto:"https://dcdn-us.mitiendanube.com/stores/001/725/516/products/whatsapp-image-2023-05-04-at-11-30-101-4cd4a3c245ad1e464216832110653877-640-0.jpeg"}
     ];
 
@@ -1275,12 +1489,30 @@
       var html = '';
       for(var i=0;i<state.filtered.length;i++){
         var r = state.filtered[i];
+        var stockStatus = r.stock === false ? '<div class="stock-badge stock-out">Sin stock</div>' : '<div class="stock-badge stock-available">Disponible</div>';
+        
+        // Calcular descuento si existe precio anterior
+        var priceHTML = '';
+        if(r.precioAnterior && r.precioAnterior > r.precio){
+          var descuentoPorcentaje = Math.round(((r.precioAnterior - r.precio) / r.precioAnterior) * 100);
+          priceHTML = "<div class='price-container'>"+
+            "<span class='discount-badge'>-"+descuentoPorcentaje+"%</span>"+
+            "<div class='price-wrapper'>"+
+              "<span class='price-current'>"+money(r.precio)+"</span>"+
+              "<span class='price-old'>"+money(r.precioAnterior)+"</span>"+
+            "</div>"+
+          "</div>";
+        } else {
+          priceHTML = "<div class='price'>"+money(r.precio)+"</div>";
+        }
+        
         html += "<div class='card'>"+
           (r.foto? ("<img class='thumb' src='"+r.foto+"' alt='"+r.nombre+"' onclick='openImageModal(\""+r.foto+"\", \""+r.nombre+"\")'/>") : "<div class='ph'>🍷</div>")+
           "<div class='body'>"+
+            stockStatus+
             "<div class='name'>"+r.nombre+"</div>"+
             "<div class='meta'>"+r.bodega+" · "+r.variedad+" · "+r.ml+" ml</div>"+
-            "<div class='price'>"+money(r.precio)+"</div>"+
+            priceHTML+
             "<div class='qty'>"+
               "<button class='iconbtn iconbtn--minus' onclick=\"sub('"+r.id+"')\">−</button>"+
               "<span class='count'>"+(state.cart[r.id]||0)+"</span>"+
@@ -1400,13 +1632,14 @@
     }
 
     function applyFilters(){
-      var q = document.getElementById('search').value.trim().toLowerCase();
       var order = document.getElementById('order').value;
+      var ocasion = document.getElementById('ocasion').value;
       var arr = [];
       for(var i=0;i<state.rows.length;i++){
         var r = state.rows[i];
-        var txt = (r.nombre+' '+r.bodega+' '+r.variedad).toLowerCase();
-        if(!q || txt.indexOf(q)>-1) arr.push(r);
+        var matchesOcasion = !ocasion || (r.ocasiones && r.ocasiones.includes(ocasion));
+        
+        if(matchesOcasion) arr.push(r);
       }
       if(order==='name-asc') arr.sort(function(a,b){ return a.nombre.localeCompare(b.nombre); });
       if(order==='price-asc') arr.sort(function(a,b){ return a.precio-b.precio; });
@@ -1429,8 +1662,8 @@
       render(); 
     });
     
-    document.getElementById('search').addEventListener('input',applyFilters);
     document.getElementById('order').addEventListener('change',applyFilters);
+    document.getElementById('ocasion').addEventListener('change',applyFilters);
 
     // ===== EVENT LISTENERS PARA ADMINISTRACIÓN =====
     document.getElementById('admin-panel').addEventListener('click', openAdminPanel);
@@ -1447,9 +1680,70 @@
     function openImageModal(imageSrc, wineName){
       var imageModal = document.getElementById('image-modal');
       var modalImage = document.getElementById('modal-image');
+      var modalWineName = document.getElementById('modal-wine-name');
+      var modalWineDetails = document.getElementById('modal-wine-details');
+      var modalWineDescription = document.getElementById('modal-wine-description');
+      
+      // Buscar el vino en la lista
+      var wine = PRODUCTOS.find(w => w.nombre === wineName);
       
       modalImage.src = imageSrc;
       modalImage.alt = wineName;
+      modalWineName.textContent = wineName;
+      
+      // Mostrar detalles del vino
+      if(wine){
+        modalWineDetails.innerHTML = `
+          <div class="wine-details-grid">
+            <div class="wine-detail-item">
+              <div class="wine-detail-label">Bodega</div>
+              <div class="wine-detail-value">${wine.bodega}</div>
+            </div>
+            <div class="wine-detail-item">
+              <div class="wine-detail-label">Variedad</div>
+              <div class="wine-detail-value">${wine.variedad}</div>
+            </div>
+            <div class="wine-detail-item">
+              <div class="wine-detail-label">Contenido</div>
+              <div class="wine-detail-value">${wine.ml} ml</div>
+            </div>
+            <div class="wine-detail-item">
+              <div class="wine-detail-label">Precio</div>
+              <div class="wine-detail-value">${money(wine.precio)}</div>
+            </div>
+          </div>
+        `;
+        
+        // Mostrar descripción si existe
+        if(wine.descripcion){
+          modalWineDescription.innerHTML = `
+            <div class="wine-description">
+              ${wine.descripcion}
+            </div>
+          `;
+        } else {
+          modalWineDescription.innerHTML = `
+            <div class="wine-description">
+              <p>Un vino excepcional de ${wine.bodega} que representa lo mejor de la tradición vitivinícola argentina. Perfecto para acompañar tus momentos especiales.</p>
+              <p><strong>Recomendación:</strong> Ideal para maridar con carnes rojas, pastas y quesos maduros.</p>
+            </div>
+          `;
+        }
+        
+        // Mostrar ocasiones si existen
+        if(wine.ocasiones && wine.ocasiones.length > 0){
+          var ocasionesHTML = wine.ocasiones.map(ocasion => `<span class="ocasion-tag">${ocasion}</span>`).join('');
+          modalWineDescription.innerHTML += `
+            <div class="wine-ocasiones">
+              <h4>🍷 Perfecto para:</h4>
+              <div class="ocasiones-tags">
+                ${ocasionesHTML}
+              </div>
+            </div>
+          `;
+        }
+      }
+      
       imageModal.style.display = 'block';
       document.body.style.overflow = 'hidden';
     }
@@ -1828,7 +2122,7 @@
       PRODUCTOS = productos;
       state.rows = PRODUCTOS.slice();
       state.filtered = PRODUCTOS.slice();
-      render();
+    render();
       
       // Cargar configuración después de renderizar
       loadConfig();
