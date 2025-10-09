@@ -1457,21 +1457,25 @@
       console.log('✅ Usando productos locales (' + PRODUCTOS.length + ' productos)');
       callback(PRODUCTOS);
       
-      // Intentar actualizar solo stock desde Firebase (no bloquea la carga)
+      // Actualizar datos desde Firebase (fotos, stock, precios editados)
       database.ref('productos').once('value').then(function(snapshot){
         var data = snapshot.val();
         if(data && Array.isArray(data)){
-          console.log('ℹ️ Actualizando stock desde Firebase');
+          console.log('ℹ️ Actualizando datos desde Firebase');
           PRODUCTOS.forEach(function(localProduct){
             var firebaseProduct = data.find(function(fp){ return fp && fp.id === localProduct.id; });
-            if(firebaseProduct && firebaseProduct.stock !== undefined){
-              localProduct.stock = firebaseProduct.stock;
+            if(firebaseProduct){
+              // Actualizar solo campos editables: foto, stock, precio, precioAnterior
+              if(firebaseProduct.foto) localProduct.foto = firebaseProduct.foto;
+              if(firebaseProduct.stock !== undefined) localProduct.stock = firebaseProduct.stock;
+              if(firebaseProduct.precio) localProduct.precio = firebaseProduct.precio;
+              if(firebaseProduct.precioAnterior) localProduct.precioAnterior = firebaseProduct.precioAnterior;
             }
           });
-          render(); // Re-renderizar con stock actualizado
+          render(); // Re-renderizar con datos actualizados
         }
       }).catch(function(e){
-        console.warn('⚠️ No se pudo cargar stock desde Firebase:', e.message);
+        console.warn('⚠️ No se pudo cargar datos desde Firebase:', e.message);
       });
     }
     
