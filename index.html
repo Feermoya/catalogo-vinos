@@ -2234,14 +2234,8 @@
     loadProductos(function(productos){
       PRODUCTOS = productos;
       
-      // Asegurar que el Combo del Mes esté en Firebase
-      if(useFirebase){
-        var tieneCombo = PRODUCTOS.some(function(p){ return p.id === "0"; });
-        if(tieneCombo){
-          console.log('✅ Sincronizando Combo del Mes con Firebase');
-          saveProductos();
-        }
-      }
+      // Ya no sincronizamos automáticamente para no sobrescribir datos editados
+      // Los cambios se guardan solo cuando editas desde el panel admin
       
       state.rows = PRODUCTOS.slice();
       state.filtered = PRODUCTOS.slice();
