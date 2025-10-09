@@ -45,11 +45,9 @@
       display:flex;
       align-items:center;
       gap:12px;
-      position:sticky;
-      top:0;
+      position:static;
       background:var(--bg);
       padding:10px 0;
-      z-index:2;
       flex-wrap:wrap;
     }
     
@@ -85,8 +83,8 @@
     
     .toolbar{
       display:flex;
-      gap:12px;
-      margin:20px 0;
+      gap:10px;
+      margin:12px 0;
       flex-wrap:wrap;
       padding:0 4px;
       min-width:100%;
@@ -97,7 +95,7 @@
       min-width:140px;
       display:flex;
       flex-direction:column;
-      gap:6px;
+      gap:4px;
     }
     
     .filter-label{
@@ -113,7 +111,7 @@
       background:white;
       border:2px solid #e9ecef;
       border-radius:12px;
-      padding:12px 16px;
+      padding:10px 14px;
       font-size:15px;
       font-weight:600;
       color:var(--ink);
@@ -1162,17 +1160,21 @@
       
       .toolbar{
         flex-direction:column;
-        gap:16px;
-        margin:16px 0;
+        gap:10px;
+        margin:8px 0 12px 0;
       }
       
       .filter-group{
         min-width:100%;
       }
       
+      /* Compactar filtros en móvil */
+      .filter-label{ display:none; }
+      .filter-select{ padding:12px 14px; font-size:16px; }
+
       .filter-select{
         font-size:16px; /* Evita zoom en iOS */
-        padding:14px 16px;
+        padding:12px 14px;
       }
     }
 
