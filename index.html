@@ -1806,27 +1806,11 @@
       var empty = true; for(var k in state.cart){ empty=false; break; }
       if(empty) return;
       
-      // Restar stock de los productos cuando se confirma la compra
-      for(var productId in state.cart){
-        var cantidad = state.cart[productId];
-        var producto = PRODUCTOS.find(p => p.id == productId);
-        
-        if(producto && producto.stock !== undefined){
-          producto.stock = Math.max(0, producto.stock - cantidad);
-        }
-      }
-      
-      // Guardar stock actualizado en Firebase
-      if(useFirebase){
-        saveProductos();
-      }
-      
-      // Construir texto de WhatsApp ANTES de limpiar carrito
+      // Construir texto de WhatsApp
       var text = buildWhatsAppText();
       
-      // Limpiar carrito después de construir el texto
-      state.cart = {};
-      localStorage.removeItem('cart');
+      // NO limpiar carrito - mantener para que el usuario pueda seguir agregando
+      // El stock se maneja manualmente desde el panel de administración
       
       // Abrimos WhatsApp en la misma pestaña para evitar bloqueo de popups
       location.href = 'https://wa.me/'+WHATSAPP_PHONE+'?text='+encodeURIComponent(text);
@@ -1860,6 +1844,7 @@
       btn.classList.add('anim-shake');
       setTimeout(function(){ btn.classList.remove('anim-shake'); }, 250);
       state.cart={}; 
+      localStorage.removeItem('cart'); // Limpiar también localStorage
       render(); 
     });
     
