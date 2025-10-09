@@ -1452,26 +1452,30 @@
         return;
       }
       
-      // PRIORIDAD TOTAL A FIREBASE - recuperar todo lo que editaste
+      // COMBINAR: Firebase + Código Local (mejor de ambos)
       database.ref('productos').once('value').then(function(snapshot){
         var data = snapshot.val();
         if(data && Array.isArray(data) && data.length > 0){
-          console.log('✅ Cargando TODOS los datos desde Firebase (' + data.length + ' productos)');
-          // Combinar Firebase con datos locales solo para descripción y ocasiones
-          var productosRecuperados = data.map(function(firebaseProduct){
-            var localProduct = PRODUCTOS.find(function(lp){ return lp && lp.id === firebaseProduct.id; });
-            if(localProduct){
+          console.log('✅ Combinando datos de Firebase + Código Local');
+          // Fusionar inteligentemente
+          var productosCombinados = PRODUCTOS.map(function(localProduct){
+            var firebaseProduct = data.find(function(fp){ return fp && fp.id === localProduct.id; });
+            if(firebaseProduct){
               return {
-                ...firebaseProduct,
-                descripcion: localProduct.descripcion || firebaseProduct.descripcion,
-                ocasiones: localProduct.ocasiones || firebaseProduct.ocasiones
+                ...localProduct, // Base: código local (nombres, descripciones, ocasiones)
+                foto: localProduct.foto || firebaseProduct.foto, // PRIORIDAD A CÓDIGO LOCAL (para actualizar fotos)
+                stock: firebaseProduct.stock !== undefined ? firebaseProduct.stock : localProduct.stock,
+                precio: firebaseProduct.precio || localProduct.precio,
+                precioAnterior: firebaseProduct.precioAnterior || localProduct.precioAnterior
               };
             }
-            return firebaseProduct;
+            return localProduct; // Si no está en Firebase, usar local
           });
-          callback(productosRecuperados);
+          
+          callback(productosCombinados);
         } else {
-          console.log('⚠️ Firebase vacío, usando datos locales');
+          console.log('⚠️ Firebase vacío, guardando datos locales');
+          saveProductos();
           callback(PRODUCTOS);
         }
       }).catch(function(e){
@@ -2235,12 +2239,17 @@
     loadProductos(function(productos){
       PRODUCTOS = productos;
       
-      // Ya no sincronizamos automáticamente para no sobrescribir datos editados
-      // Los cambios se guardan solo cuando editas desde el panel admin
+      // Sincronizar fotos nuevas del código a Firebase
+      if(useFirebase){
+        setTimeout(function(){
+          saveProductos();
+          console.log('✅ Sincronizando fotos con Firebase');
+        }, 2000);
+      }
       
       state.rows = PRODUCTOS.slice();
       state.filtered = PRODUCTOS.slice();
-    render();
+      render();
       
       // Cargar configuración después de renderizar
       loadConfig();
