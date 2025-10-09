@@ -1453,35 +1453,25 @@
         return;
       }
       
+      // SIEMPRE usar productos locales como base
+      console.log('✅ Usando productos locales (' + PRODUCTOS.length + ' productos)');
+      callback(PRODUCTOS);
+      
+      // Intentar actualizar solo stock desde Firebase (no bloquea la carga)
       database.ref('productos').once('value').then(function(snapshot){
         var data = snapshot.val();
-        if(data && Array.isArray(data) && data.length > 0){
-          console.log('✅ Productos cargados desde Firebase');
-          // Fusionar datos de Firebase con datos locales (prioridad a locales)
-          var mergedProductos = data.map(function(firebaseProduct, index){
-            var localProduct = PRODUCTOS[index];
-            if(localProduct){
-              // Mantener datos locales para campos específicos
-              return {
-                ...firebaseProduct,
-                precioAnterior: localProduct.precioAnterior || firebaseProduct.precioAnterior,
-                descripcion: localProduct.descripcion || firebaseProduct.descripcion,
-                ocasiones: localProduct.ocasiones || firebaseProduct.ocasiones,
-                stock: localProduct.stock !== undefined ? localProduct.stock : firebaseProduct.stock
-              };
+        if(data && Array.isArray(data)){
+          console.log('ℹ️ Actualizando stock desde Firebase');
+          PRODUCTOS.forEach(function(localProduct){
+            var firebaseProduct = data.find(function(fp){ return fp && fp.id === localProduct.id; });
+            if(firebaseProduct && firebaseProduct.stock !== undefined){
+              localProduct.stock = firebaseProduct.stock;
             }
-            return firebaseProduct;
           });
-          callback(mergedProductos);
-        } else {
-          console.log('ℹ️ No hay productos en Firebase, usando datos por defecto');
-          // Guardar productos por defecto en Firebase
-          saveProductos();
-          callback(PRODUCTOS);
+          render(); // Re-renderizar con stock actualizado
         }
       }).catch(function(e){
-        console.error('❌ Error al cargar productos desde Firebase:', e);
-        callback(PRODUCTOS);
+        console.warn('⚠️ No se pudo cargar stock desde Firebase:', e.message);
       });
     }
     
