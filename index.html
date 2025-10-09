@@ -1409,7 +1409,7 @@
     var WHATSAPP_PHONE = "5492615760276";
     var PRODUCTOS = [
       // COMBO DEL MES ⭐
-      {id:"0", nombre:"🔥 Combo del Mes", bodega:"", variedad:"", ml:0, precio:0, foto:"https://feermoya.github.io/catalogo-vinos/img/41D3FB9F-977C-4921-97A0-C26DB67AF0F1_1_105_c.jpeg", descripcion:"<p><strong>🔥 Combo especial del mes</strong></p>", ocasiones:["Regalo"], destacado:true},
+      {id:"0", nombre:"🔥 Combo del Mes", bodega:"Selección", variedad:"Mix", ml:1500, precio:35000, foto:"https://feermoya.github.io/catalogo-vinos/img/41D3FB9F-977C-4921-97A0-C26DB67AF0F1_1_105_c.jpeg", descripcion:"<p><strong>🔥 Combo especial del mes</strong></p>", ocasiones:["Regalo"], destacado:true},
       
       // PREMIUM (más de $15000)
       {id:"1", nombre:"Wayra Vineyard Selection Calyptra", bodega:"Wayra", variedad:"Cabernet Franc", ml:750, precio:20000, precioAnterior:23000, foto:"https://solyvinomendoza.com/36225-superlarge_default_2x/vino-cabernet-franc-calyptra-wayra-single-vineyard-750-ml.jpg", descripcion:"<p><strong>Vino intenso y elegante</strong>, con notas especiadas y final suave. Ideal para disfrutar en una cena especial o para regalar.</p>", ocasiones:["Cena especial", "Regalo"]},
@@ -1573,14 +1573,13 @@
           "<div class='body'>"+
             stockStatus+
             "<div class='name'>"+r.nombre+"</div>"+
-            (r.destacado ? "" : "<div class='meta'>"+r.bodega+" · "+r.variedad+" · "+r.ml+" ml</div>")+
-            (r.destacado ? "" : priceHTML)+
-            (r.destacado ? "<div style='text-align:center; padding:10px; color:var(--accent); font-weight:600;'>Consultá por WhatsApp 📲</div>" : 
-              "<div class='qty'>"+
-                "<button class='iconbtn iconbtn--minus' onclick=\"sub('"+r.id+"')\">−</button>"+
-                "<span class='count'>"+(state.cart[r.id]||0)+"</span>"+
-                "<button class='iconbtn iconbtn--plus' onclick=\"add('"+r.id+"')\""+disabledBtn+">+</button>"+
-              "</div>")+
+            "<div class='meta'>"+r.bodega+" · "+r.variedad+" · "+r.ml+" ml</div>"+
+            priceHTML+
+            "<div class='qty'>"+
+              "<button class='iconbtn iconbtn--minus' onclick=\"sub('"+r.id+"')\">−</button>"+
+              "<span class='count'>"+(state.cart[r.id]||0)+"</span>"+
+              "<button class='iconbtn iconbtn--plus' onclick=\"add('"+r.id+"')\""+disabledBtn+">+</button>"+
+            "</div>"+
           "</div>"+
         "</div>";
       }
