@@ -2233,6 +2233,16 @@
     // Cargar productos y configuración al iniciar
     loadProductos(function(productos){
       PRODUCTOS = productos;
+      
+      // Asegurar que el Combo del Mes esté en Firebase
+      if(useFirebase){
+        var tieneCombo = PRODUCTOS.some(function(p){ return p.id === "0"; });
+        if(tieneCombo){
+          console.log('✅ Sincronizando Combo del Mes con Firebase');
+          saveProductos();
+        }
+      }
+      
       state.rows = PRODUCTOS.slice();
       state.filtered = PRODUCTOS.slice();
       render();
