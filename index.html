@@ -85,10 +85,55 @@
     
     .toolbar{
       display:flex;
-      gap:8px;
-      flex:1;
-      justify-content:flex-end;
+      gap:12px;
+      margin:20px 0;
+      flex-wrap:wrap;
+      padding:0 4px;
       min-width:100%;
+    }
+    
+    .filter-group{
+      flex:1;
+      min-width:140px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    
+    .filter-label{
+      font-size:11px;
+      font-weight:500;
+      color:#6b7280;
+      text-transform:uppercase;
+      letter-spacing:0.3px;
+      margin:0;
+    }
+    
+    .filter-select{
+      background:white;
+      border:2px solid #e9ecef;
+      border-radius:12px;
+      padding:12px 16px;
+      font-size:15px;
+      font-weight:600;
+      color:var(--ink);
+      transition:all 0.2s ease;
+      appearance:none;
+      background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat:no-repeat;
+      background-position:right 12px center;
+      background-size:16px;
+      padding-right:40px;
+    }
+    
+    .filter-select:focus{
+      outline:none;
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(139, 69, 19, 0.1);
+    }
+    
+    .filter-select:hover{
+      border-color:#d1d5db;
     }
     
     @media(min-width:520px){
@@ -1114,6 +1159,21 @@
       .modal-actions{
         flex-direction:column;
       }
+      
+      .toolbar{
+        flex-direction:column;
+        gap:16px;
+        margin:16px 0;
+      }
+      
+      .filter-group{
+        min-width:100%;
+      }
+      
+      .filter-select{
+        font-size:16px; /* Evita zoom en iOS */
+        padding:14px 16px;
+      }
     }
 
     /* ===== ANIMACIONES ===== */
@@ -1191,19 +1251,27 @@
         </div>
       </div>
       <div class="toolbar">
-        <select id="ocasion">
-          <option value="">🍷 ¿Para qué ocasión?</option>
-          <option value="Cena especial">💕 Cena especial</option>
-          <option value="Asado">🥩 Asado</option>
-          <option value="Almuerzo">🍽️ Almuerzo</option>
-          <option value="Aperitivo">🥂 Aperitivo</option>
-          <option value="Regalo">🎁 Regalo</option>
-        </select>
-      <select id="order">
-        <option value="name-asc">Nombre (A→Z)</option>
-        <option value="price-asc">Precio (↓)</option>
-        <option value="price-desc">Precio (↑)</option>
-      </select>
+        <div class="filter-group">
+          <label for="ocasion" class="filter-label">Filtrar por ocasión</label>
+          <select id="ocasion" class="filter-select">
+            <option value="">Todas las ocasiones</option>
+            <option value="Cena especial">💕 Cena especial</option>
+            <option value="Asado">🥩 Asado</option>
+            <option value="Almuerzo">🍽️ Almuerzo</option>
+            <option value="Aperitivo">🥂 Aperitivo</option>
+            <option value="Regalo">🎁 Regalo</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label for="order" class="filter-label">Ordenar por</label>
+          <select id="order" class="filter-select">
+            <option value="name-asc">Nombre A→Z</option>
+            <option value="name-desc">Nombre Z→A</option>
+            <option value="price-asc">Precio ↑</option>
+            <option value="price-desc">Precio ↓</option>
+          </select>
+        </div>
       </div>
     </header>
 
@@ -1552,7 +1620,11 @@
       });
     }
 
-    var state = { rows: PRODUCTOS.slice(), filtered: PRODUCTOS.slice(), cart: {} };
+    // Cargar carrito desde localStorage
+    var savedCart = localStorage.getItem('cart');
+    var initialCart = savedCart ? JSON.parse(savedCart) : {};
+    
+    var state = { rows: PRODUCTOS.slice(), filtered: PRODUCTOS.slice(), cart: initialCart };
     function money(n){ return n.toLocaleString('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}); }
 
     function render(){
@@ -1560,7 +1632,10 @@
       var html = '';
       for(var i=0;i<state.filtered.length;i++){
         var r = state.filtered[i];
-        var stockStatus = (r.stock !== undefined && r.stock <= 0) ? '<div class="stock-badge stock-out">Sin stock</div>' : '';
+        // Verificar stock considerando lo que ya está en el carrito
+        var cantidadEnCarrito = state.cart[r.id] || 0;
+        var stockDisponible = r.stock !== undefined ? r.stock - cantidadEnCarrito : 999;
+        var stockStatus = (r.stock !== undefined && stockDisponible <= 0) ? '<div class="stock-badge stock-out">Sin stock</div>' : '';
         
         // Calcular descuento si existe precio anterior
         var priceHTML = '';
@@ -1573,7 +1648,7 @@
           priceHTML = "<div class='price'>"+money(r.precio)+"</div>";
         }
         
-        var isOutOfStock = (r.stock !== undefined && r.stock <= 0);
+        var isOutOfStock = (r.stock !== undefined && stockDisponible <= 0);
         var disabledBtn = isOutOfStock ? " disabled style='opacity:0.5; cursor:not-allowed;'" : "";
         var cardClass = r.destacado ? "card destacado" : "card";
         
@@ -1601,18 +1676,27 @@
       var p = PRODUCTOS.find(x => x.id == id);
       if(!p) return;
       
-      // Verificar si hay stock disponible (sin alertas molestas)
-      if(p.stock !== undefined && p.stock <= 0){
-        return; // Simplemente no hace nada
+      // Verificar si hay stock disponible (considerando lo que ya está en el carrito)
+      var cantidadActual = state.cart[id] || 0;
+      var cantidadTotal = cantidadActual + 1;
+      
+      if(p.stock !== undefined && cantidadTotal > p.stock){
+        return; // No hay suficiente stock
       }
       
       state.cart[id] = (state.cart[id]||0) + 1; 
+      
+      // Guardar carrito en localStorage
+      localStorage.setItem('cart', JSON.stringify(state.cart));
       
       // NO restar stock aquí - solo se resta cuando se confirma la compra
       // El stock se verifica al cargar la página
       
       updateCartDisplay(id); // Solo actualizar el contador específico
       renderCart();
+      
+      // Re-renderizar para actualizar badges de stock
+      render();
       // Animar el botón de WhatsApp
       var btn = document.getElementById('whatsapp');
       btn.classList.remove('anim-pulse');
@@ -1626,10 +1710,16 @@
         state.cart[id] = Math.max(0, state.cart[id]-1); 
         if(!state.cart[id]) delete state.cart[id]; 
         
+        // Guardar carrito en localStorage
+        localStorage.setItem('cart', JSON.stringify(state.cart));
+        
         // NO devolver stock aquí - el stock solo se modifica al confirmar compra
         
         updateCartDisplay(id); // Solo actualizar el contador específico
         renderCart();
+        
+        // Re-renderizar para actualizar badges de stock
+        render();
       } 
     }
 
@@ -2248,6 +2338,25 @@
     });
 
     // =====================
+    // RECONSTRUCCIÓN DE CARRITO
+    // =====================
+    function rebuildCartInterface(){
+      // Para cada producto en el carrito, actualizar la interfaz
+      for(var productId in state.cart){
+        var cantidad = state.cart[productId];
+        
+        // Actualizar el contador específico
+        updateCartDisplay(productId);
+        
+        // Re-renderizar para actualizar badges
+        render();
+      }
+      
+      // Actualizar el carrito principal
+      renderCart();
+    }
+
+    // =====================
     // VERIFICACIÓN DE STOCK
     // =====================
     function checkStockAndCleanCart(){
@@ -2262,18 +2371,19 @@
             if(producto.stock <= 0){
               // Sin stock: eliminar del carrito
               delete state.cart[productId];
-              console.log(`❌ ${producto.nombre}: Sin stock - eliminado del carrito`);
             } else {
               // Stock insuficiente: ajustar cantidad
               state.cart[productId] = producto.stock;
-              console.log(`⚠️ ${producto.nombre}: Stock insuficiente - ajustado a ${producto.stock}`);
             }
           }
         }
       }
       
-      // Guardar carrito actualizado
+      // Guardar carrito actualizado en localStorage
       localStorage.setItem('cart', JSON.stringify(state.cart));
+      
+      // Actualizar el carrito en la interfaz
+      renderCart();
     }
 
     // ===== INICIALIZACIÓN =====
@@ -2292,9 +2402,13 @@
       state.rows = PRODUCTOS.slice();
       state.filtered = PRODUCTOS.slice();
       
-      // Verificar stock disponible y limpiar carrito si es necesario
-      checkStockAndCleanCart();
+      // RECARGAR CARRITO DESDE LOCALSTORAGE DESPUÉS DE LOADPRODUCTOS
+      var savedCart = localStorage.getItem('cart');
+      if(savedCart){
+        state.cart = JSON.parse(savedCart);
+      }
       
+      // Renderizar con el carrito recargado
       render();
       
       // Cargar configuración después de renderizar
