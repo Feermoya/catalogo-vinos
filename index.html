@@ -1608,16 +1608,8 @@
       
       state.cart[id] = (state.cart[id]||0) + 1; 
       
-      // Restar automáticamente del stock
-      if(p.stock !== undefined){
-        p.stock = p.stock - 1;
-        saveProductos(); // Guardar en Firebase
-        
-        // Si llegó a 0, re-renderizar para mostrar "Sin stock"
-        if(p.stock <= 0){
-          render(); // Re-renderizar para actualizar badge y deshabilitar botón
-        }
-      }
+      // NO restar stock aquí - solo se resta cuando se confirma la compra
+      // El stock se verifica al cargar la página
       
       updateCartDisplay(id); // Solo actualizar el contador específico
       renderCart();
@@ -1634,12 +1626,7 @@
         state.cart[id] = Math.max(0, state.cart[id]-1); 
         if(!state.cart[id]) delete state.cart[id]; 
         
-        // Devolver stock cuando quita del carrito
-        if(p && p.stock !== undefined){
-          p.stock = p.stock + 1;
-          saveProductos(); // Guardar en Firebase
-          render(); // Re-renderizar para actualizar badge y habilitar botón
-        }
+        // NO devolver stock aquí - el stock solo se modifica al confirmar compra
         
         updateCartDisplay(id); // Solo actualizar el contador específico
         renderCart();
@@ -1728,8 +1715,30 @@
       // Evitar navegación con carrito vacío
       var empty = true; for(var k in state.cart){ empty=false; break; }
       if(empty) return;
-      // Abrimos WhatsApp en la misma pestaña para evitar bloqueo de popups
+      
+      // Restar stock de los productos cuando se confirma la compra
+      for(var productId in state.cart){
+        var cantidad = state.cart[productId];
+        var producto = PRODUCTOS.find(p => p.id == productId);
+        
+        if(producto && producto.stock !== undefined){
+          producto.stock = Math.max(0, producto.stock - cantidad);
+        }
+      }
+      
+      // Guardar stock actualizado en Firebase
+      if(useFirebase){
+        saveProductos();
+      }
+      
+      // Construir texto de WhatsApp ANTES de limpiar carrito
       var text = buildWhatsAppText();
+      
+      // Limpiar carrito después de construir el texto
+      state.cart = {};
+      localStorage.removeItem('cart');
+      
+      // Abrimos WhatsApp en la misma pestaña para evitar bloqueo de popups
       location.href = 'https://wa.me/'+WHATSAPP_PHONE+'?text='+encodeURIComponent(text);
     }
 
@@ -2238,6 +2247,35 @@
       }
     });
 
+    // =====================
+    // VERIFICACIÓN DE STOCK
+    // =====================
+    function checkStockAndCleanCart(){
+      // Verificar cada producto en el carrito
+      for(var productId in state.cart){
+        var cantidadEnCarrito = state.cart[productId];
+        var producto = PRODUCTOS.find(p => p.id == productId);
+        
+        if(producto && producto.stock !== undefined){
+          // Si no hay suficiente stock, ajustar o eliminar del carrito
+          if(producto.stock < cantidadEnCarrito){
+            if(producto.stock <= 0){
+              // Sin stock: eliminar del carrito
+              delete state.cart[productId];
+              console.log(`❌ ${producto.nombre}: Sin stock - eliminado del carrito`);
+            } else {
+              // Stock insuficiente: ajustar cantidad
+              state.cart[productId] = producto.stock;
+              console.log(`⚠️ ${producto.nombre}: Stock insuficiente - ajustado a ${producto.stock}`);
+            }
+          }
+        }
+      }
+      
+      // Guardar carrito actualizado
+      localStorage.setItem('cart', JSON.stringify(state.cart));
+    }
+
     // ===== INICIALIZACIÓN =====
     // Cargar productos y configuración al iniciar
     loadProductos(function(productos){
@@ -2253,6 +2291,10 @@
       
       state.rows = PRODUCTOS.slice();
       state.filtered = PRODUCTOS.slice();
+      
+      // Verificar stock disponible y limpiar carrito si es necesario
+      checkStockAndCleanCart();
+      
       render();
       
       // Cargar configuración después de renderizar
