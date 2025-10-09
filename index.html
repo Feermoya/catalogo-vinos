@@ -1573,13 +1573,14 @@
           "<div class='body'>"+
             stockStatus+
             "<div class='name'>"+r.nombre+"</div>"+
-            "<div class='meta'>"+r.bodega+" · "+r.variedad+" · "+r.ml+" ml</div>"+
-            priceHTML+
+            (r.destacado ? "" : "<div class='meta'>"+r.bodega+" · "+r.variedad+" · "+r.ml+" ml</div>")+
+            (r.destacado ? "" : priceHTML)+
+            (r.destacado ? "<div style='text-align:center; padding:10px; color:var(--accent); font-weight:600;'>Consultá por WhatsApp 📲</div>" : 
             "<div class='qty'>"+
-              "<button class='iconbtn iconbtn--minus' onclick=\"sub('"+r.id+"')\">−</button>"+
-              "<span class='count'>"+(state.cart[r.id]||0)+"</span>"+
-              "<button class='iconbtn iconbtn--plus' onclick=\"add('"+r.id+"')\""+disabledBtn+">+</button>"+
-            "</div>"+
+                "<button class='iconbtn iconbtn--minus' onclick=\"sub('"+r.id+"')\">−</button>"+
+                "<span class='count'>"+(state.cart[r.id]||0)+"</span>"+
+                "<button class='iconbtn iconbtn--plus' onclick=\"add('"+r.id+"')\""+disabledBtn+">+</button>"+
+              "</div>")+
           "</div>"+
         "</div>";
       }
@@ -2244,7 +2245,7 @@
       
       state.rows = PRODUCTOS.slice();
       state.filtered = PRODUCTOS.slice();
-      render();
+    render();
       
       // Cargar configuración después de renderizar
       loadConfig();
