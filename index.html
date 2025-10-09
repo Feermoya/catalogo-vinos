@@ -1306,7 +1306,7 @@
   </div>
 
   <!-- Carrito Flotante -->
-  <div id="floating-cart" class="floating-cart" onclick="scrollToCart()">
+  <div id="floating-cart" class="floating-cart" onclick="openCartModal()">
     <div class="floating-cart-content">
       <div class="floating-cart-icon">🛒</div>
       <div class="floating-cart-info">
@@ -1329,6 +1329,27 @@
           <div id="modal-wine-details"></div>
           <div id="modal-wine-description"></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal del Carrito -->
+  <div id="cart-modal" class="modal">
+    <div class="modal-content" style="max-width:600px;">
+      <div class="modal-header">
+        <h2>🛒 Tu Pedido</h2>
+        <span class="close" id="close-cart-modal">&times;</span>
+      </div>
+      <div id="cart-modal-content" style="padding:20px;">
+        <!-- Contenido del carrito se genera dinámicamente -->
+      </div>
+      <div style="padding:0 20px 20px 20px;">
+        <button class="whatsapp-btn" id="cart-modal-whatsapp" style="width:100%; margin-bottom:10px;">
+          📱 Enviar Pedido por WhatsApp
+        </button>
+        <button class="btn-cancel" id="cart-modal-clear" style="width:100%;">
+          🗑️ Vaciar Carrito
+        </button>
       </div>
     </div>
   </div>
@@ -1778,16 +1799,87 @@
       }
     }
 
-    // Función para hacer scroll al carrito principal
-    function scrollToCart(){
-      var cartbar = document.querySelector('.cartbar');
-      cartbar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Función para abrir el modal del carrito
+    function openCartModal(){
+      var cartModal = document.getElementById('cart-modal');
+      var cartModalContent = document.getElementById('cart-modal-content');
       
-      // Destacar el carrito por un momento
-      cartbar.style.background = 'linear-gradient(135deg, #8b3a3a, var(--accent))';
-      setTimeout(function(){
-        cartbar.style.background = '#1f1b18';
-      }, 1000);
+      // Construir contenido del carrito
+      var html = '';
+      var total = 0;
+      var items = 0;
+      var hasItems = false;
+      
+      for(var pid in state.cart){
+        hasItems = true;
+        var q = state.cart[pid];
+        var r = null;
+        for(var i=0;i<state.rows.length;i++){ 
+          if(state.rows[i].id===pid){ r=state.rows[i]; break; } 
+        }
+        if(!r) continue;
+        
+        total += q * r.precio;
+        items += q;
+        
+        html += '<div style="display:flex; gap:12px; padding:12px; border-bottom:1px solid #eee; align-items:center;">'+
+          '<img src="'+(r.foto || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><rect fill="%23efe7db"/><text x="30" y="38" text-anchor="middle" font-size="24">🍷</text></svg>')+'" style="width:60px; height:60px; object-fit:cover; border-radius:8px;">'+
+          '<div style="flex:1; min-width:0;">'+
+            '<div style="font-weight:600; font-size:14px; margin-bottom:4px;">'+r.nombre+'</div>'+
+            '<div style="color:#666; font-size:13px;">'+r.bodega+' · '+r.variedad+'</div>'+
+            '<div style="color:var(--accent); font-weight:700; margin-top:4px;">'+money(r.precio)+' × '+q+' = '+money(r.precio * q)+'</div>'+
+          '</div>'+
+          '<div style="display:flex; align-items:center; gap:8px;">'+
+            '<button onclick="subFromModal(\''+r.id+'\')" style="width:32px; height:32px; border-radius:8px; border:1px solid #ddd; background:white; cursor:pointer; font-size:18px;">−</button>'+
+            '<span style="font-weight:600; min-width:20px; text-align:center;">'+q+'</span>'+
+            '<button onclick="addFromModal(\''+r.id+'\')" style="width:32px; height:32px; border-radius:8px; border:none; background:var(--accent); color:white; cursor:pointer; font-size:18px;">+</button>'+
+          '</div>'+
+        '</div>';
+      }
+      
+      if(!hasItems){
+        html = '<div style="text-align:center; padding:40px 20px; color:#999;">'+
+          '<div style="font-size:48px; margin-bottom:12px;">🛒</div>'+
+          '<p>Tu carrito está vacío</p>'+
+          '<p style="font-size:14px;">Agregá vinos para comenzar tu pedido</p>'+
+        '</div>';
+      } else {
+        html += '<div style="padding:16px; background:#f8f9fa; border-radius:8px; margin-top:12px;">'+
+          '<div style="display:flex; justify-content:space-between; align-items:center;">'+
+            '<span style="font-size:16px; font-weight:600;">Total:</span>'+
+            '<span style="font-size:24px; font-weight:800; color:var(--accent);">'+money(total)+'</span>'+
+          '</div>'+
+          '<div style="color:#666; font-size:13px; margin-top:4px;">'+items+' producto'+(items>1?'s':'')+'</div>'+
+        '</div>';
+      }
+      
+      cartModalContent.innerHTML = html;
+      
+      // Habilitar/deshabilitar botones
+      document.getElementById('cart-modal-whatsapp').disabled = !hasItems;
+      document.getElementById('cart-modal-clear').disabled = !hasItems;
+      
+      // Mostrar modal
+      cartModal.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+    
+    // Función para cerrar el modal del carrito
+    function closeCartModal(){
+      var cartModal = document.getElementById('cart-modal');
+      cartModal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+    
+    // Funciones para agregar/quitar desde el modal
+    function addFromModal(id){
+      add(id);
+      openCartModal(); // Refrescar modal
+    }
+    
+    function subFromModal(id){
+      sub(id);
+      openCartModal(); // Refrescar modal
     }
 
     function buildWhatsAppText(){
@@ -1950,15 +2042,39 @@
       }
     });
     
+    // Event listeners para modal del carrito
+    document.getElementById('close-cart-modal').addEventListener('click', closeCartModal);
+    document.getElementById('cart-modal').addEventListener('click', function(event){
+      if(event.target == this){
+        closeCartModal();
+      }
+    });
+    
+    // Botones del modal de carrito
+    document.getElementById('cart-modal-whatsapp').addEventListener('click', function(){
+      closeCartModal();
+      sendWhatsApp();
+    });
+    
+    document.getElementById('cart-modal-clear').addEventListener('click', function(){
+      state.cart = {};
+      localStorage.removeItem('cart');
+      render();
+      closeCartModal();
+    });
+    
     // Cerrar con tecla Escape
     document.addEventListener('keydown', function(event){
       if(event.key === 'Escape'){
         var imageModal = document.getElementById('image-modal');
         var wineModal = document.getElementById('wine-modal');
+        var cartModal = document.getElementById('cart-modal');
         if(imageModal.style.display === 'block'){
           closeImageModal();
         } else if(wineModal.style.display === 'block'){
           closeModal();
+        } else if(cartModal.style.display === 'block'){
+          closeCartModal();
         }
       }
     });
