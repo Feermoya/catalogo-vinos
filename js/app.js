@@ -83,7 +83,22 @@ function renderCart(){
     items += q;
   }
   
-  document.getElementById('cart-total').textContent = money(total);
+  // ===== INTEGRACIÓN CON SISTEMA DE DESCUENTOS =====
+  // Si existe la función de descuentos, calcular total con descuento
+  var displayTotal = total;
+  var discountBadge = '';
+  
+  if(typeof calculateCartTotals === 'function'){
+    var totals = calculateCartTotals(state.cart, state.rows);
+    displayTotal = totals.total;
+    
+    // Agregar badge de descuento si existe
+    if(totals.discount > 0){
+      discountBadge = ' <span style="background:#25D366; color:white; padding:2px 6px; border-radius:8px; font-size:10px; font-weight:600;">🎉 -'+totals.discountPercentage+'%</span>';
+    }
+  }
+  
+  document.getElementById('cart-total').innerHTML = money(displayTotal) + discountBadge;
   document.getElementById('cart-items').textContent = '('+items+')';
   
   var hasItems = items>0;
@@ -116,6 +131,13 @@ function applyFilters(){
 
 // Función para construir el texto de WhatsApp
 function buildWhatsAppText(){
+  // ===== INTEGRACIÓN CON SISTEMA DE DESCUENTOS =====
+  // Si existe la función de descuentos, usarla
+  if(typeof buildWhatsAppTextWithDiscounts === 'function'){
+    return buildWhatsAppTextWithDiscounts(state.cart, state.rows);
+  }
+  
+  // Fallback: versión original sin descuentos
   var lines=['Hola! Quiero pedir estos vinos:',''];
   var total=0;
   

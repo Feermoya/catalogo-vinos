@@ -18,9 +18,18 @@ function updateFloatingCart(){
     items += q;
   }
   
+  // ===== INTEGRACIÓN CON SISTEMA DE DESCUENTOS =====
+  // Si existe la función de descuentos, calcular total con descuento
+  var displayTotal = total;
+  
+  if(typeof calculateCartTotals === 'function'){
+    var totals = calculateCartTotals(state.cart, state.rows);
+    displayTotal = totals.total;
+  }
+  
   if(items > 0){
     floatingItems.textContent = items;
-    floatingTotal.textContent = money(total);
+    floatingTotal.textContent = money(displayTotal);
     floatingCart.classList.add('show');
   } else {
     floatingCart.classList.remove('show');

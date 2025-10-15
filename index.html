@@ -1844,12 +1844,33 @@
           '<p style="font-size:14px;">Agregá vinos para comenzar tu pedido</p>'+
         '</div>';
       } else {
+        // ===== INTEGRACIÓN CON SISTEMA DE DESCUENTOS =====
+        var totalsDisplay = '';
+        var incentiveMessage = '';
+        
+        if(typeof calculateCartTotals === 'function'){
+          var totals = calculateCartTotals(state.cart, state.rows);
+          
+          // Usar la función de formato si existe
+          if(typeof formatPriceBreakdown === 'function'){
+            totalsDisplay = formatPriceBreakdown(totals);
+          } else {
+            totalsDisplay = '<div style="font-size:24px; font-weight:800; color:var(--accent);">'+money(totals.total)+'</div>';
+          }
+          
+          // Mensaje de incentivo para el siguiente nivel
+          if(typeof formatDiscountIncentive === 'function'){
+            incentiveMessage = formatDiscountIncentive(totals);
+          }
+        } else {
+          // Fallback: sin descuentos
+          totalsDisplay = '<div style="font-size:24px; font-weight:800; color:var(--accent);">'+money(total)+'</div>';
+        }
+        
         html += '<div style="padding:16px; background:#f8f9fa; border-radius:8px; margin-top:12px;">'+
-          '<div style="display:flex; justify-content:space-between; align-items:center;">'+
-            '<span style="font-size:16px; font-weight:600;">Total:</span>'+
-            '<span style="font-size:24px; font-weight:800; color:var(--accent);">'+money(total)+'</span>'+
-          '</div>'+
-          '<div style="color:#666; font-size:13px; margin-top:4px;">'+items+' producto'+(items>1?'s':'')+'</div>'+
+          totalsDisplay+
+          '<div style="color:#666; font-size:13px; margin-top:8px;">'+items+' producto'+(items>1?'s':'')+'</div>'+
+          incentiveMessage+
         '</div>';
       }
       
@@ -2536,5 +2557,10 @@
       }catch(e){ console.warn('Tests fallaron', e); }
     })();
   </script>
+  
+  <!-- ===== MÓDULOS EXTERNOS ===== -->
+  <!-- Sistema de descuentos por volumen (modular y fácil de desactivar) -->
+  <script src="js/discounts.js"></script>
+  
 </body>
 </html>
