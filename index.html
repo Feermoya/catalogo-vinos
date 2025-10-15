@@ -1281,7 +1281,19 @@
     <div class="info-banner">
       <div class="info-content">
         <h3>🍷 ¿Cómo funciona?</h3>
-        <p>Elegí los vinos que te gusten, ajustá las cantidades y hacé clic en <strong>"Enviar por WhatsApp"</strong>. Te redirigimos a WhatsApp con tu pedido listo para enviar. <strong>¡Es súper fácil!</strong></p>
+        <p>Elegí los vinos que te gusten, ajustá las cantidades y hacé clic en <strong>"Ver Carrito"</strong>. Te redirigimos a WhatsApp con tu pedido listo para enviar. <strong>¡Es súper fácil!</strong></p>
+        
+        <!-- Información de descuentos -->
+        <div style="background:linear-gradient(135deg, #25D366, #20BA5A); color:white; padding:12px; border-radius:8px; margin-top:12px;">
+          <div style="font-weight:700; font-size:14px; margin-bottom:6px;">🎉 ¡Más vinos = Más descuentos!</div>
+          <div style="font-size:12px; line-height:1.4;">
+            <strong>2 vinos:</strong> 10% • 
+            <strong>3 vinos:</strong> 15% • 
+            <strong>4-5 vinos:</strong> 15% • 
+            <strong>6-9 vinos:</strong> 18% • 
+            <strong>10+ vinos:</strong> 20%
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1293,14 +1305,14 @@
         <button id="admin-panel" class="admin-btn" style="display:none;">⚙️ Admin</button>
         <button id="add-wine" class="add-wine-btn" style="display:none;">+ Agregar Vino</button>
         <button id="clear" disabled>Vaciar</button>
-        <button class="whatsapp-btn" id="whatsapp" disabled>📱 Enviar por WhatsApp</button>
+        <button class="whatsapp-btn" id="view-cart" disabled onclick="openCartModal()">🛒 Ver Carrito</button>
       </div>
     </div>
     <div class="cart-info">
       <div class="cart-icon">🛒</div>
       <div class="cart-text">
         <strong>¡Fácil y rápido!</strong><br>
-        Elegí tus vinos, ajustá las cantidades y enviá el pedido por WhatsApp
+        Elegí tus vinos, ajustá las cantidades y hacé clic en "Ver Carrito" para finalizar
       </div>
     </div>
   </div>
@@ -1720,8 +1732,8 @@
       
       // Re-renderizar para actualizar badges de stock
       render();
-      // Animar el botón de WhatsApp
-      var btn = document.getElementById('whatsapp');
+      // Animar el botón de ver carrito
+      var btn = document.getElementById('view-cart');
       btn.classList.remove('anim-pulse');
       setTimeout(function(){ btn.classList.add('anim-pulse'); }, 10);
     }
@@ -1764,9 +1776,9 @@
       }
       document.getElementById('cart-total').textContent = money(total);
       document.getElementById('cart-items').textContent = '('+items+')';
-      var hasItems = items>0;
-      document.getElementById('whatsapp').disabled = !hasItems;
-      document.getElementById('clear').disabled = !hasItems;
+  var hasItems = items>0;
+  document.getElementById('view-cart').disabled = !hasItems;
+  document.getElementById('clear').disabled = !hasItems;
       
       // Actualizar carrito flotante
       updateFloatingCart();
@@ -1870,8 +1882,15 @@
         html += '<div style="padding:16px; background:#f8f9fa; border-radius:8px; margin-top:12px;">'+
           totalsDisplay+
           '<div style="color:#666; font-size:13px; margin-top:8px;">'+items+' producto'+(items>1?'s':'')+'</div>'+
-          incentiveMessage+
         '</div>';
+        
+        // ===== SUGERENCIAS INTELIGENTES =====
+        if(typeof generateSmartSuggestions === 'function' && typeof formatSuggestionsHTML === 'function'){
+          var suggestions = generateSmartSuggestions(state.cart, state.rows, totals);
+          if(suggestions.length > 0){
+            html += formatSuggestionsHTML(suggestions, totals);
+          }
+        }
       }
       
       cartModalContent.innerHTML = html;
@@ -1947,12 +1966,7 @@
       state.filtered = arr; render();
     }
 
-    document.getElementById('whatsapp').addEventListener('click',function(){
-      var btn = this;
-      btn.classList.add('anim-bump');
-      setTimeout(function(){ btn.classList.remove('anim-bump'); }, 320);
-      sendWhatsApp();
-    });
+    // El botón WhatsApp ahora está solo en el modal del carrito
     
     document.getElementById('clear').addEventListener('click',function(){ 
       var btn = this;
@@ -2561,6 +2575,8 @@
   <!-- ===== MÓDULOS EXTERNOS ===== -->
   <!-- Sistema de descuentos por volumen (modular y fácil de desactivar) -->
   <script src="js/discounts.js"></script>
+  <!-- Sistema de sugerencias inteligentes -->
+  <script src="js/smart-suggestions.js"></script>
   
 </body>
 </html>
