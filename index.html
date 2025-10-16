@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://www.googleapis.com https://fonts.googleapis.com https://*.firebaseio.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://www.gstatic.com; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://www.googleapis.com https://fonts.googleapis.com https://*.firebaseio.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://www.gstatic.com; frame-src https://*.firebaseio.com; base-uri 'self'; form-action 'self'">
   <title>Tengo Vinos — Catálogo Premium | Vinos de Mendoza</title>
   <meta name="description" content="Catálogo de vinos premium de Mendoza. Encontrá el vino perfecto para cada ocasión. Envío a domicilio. Consultá por WhatsApp." />
   <meta name="keywords" content="vinos, mendoza, malbec, cabernet, vino tinto, vino blanco, vinos premium" />
@@ -247,22 +247,16 @@
       object-fit:cover;
       border-radius:12px;
       display:block;
-      transition:transform .3s ease, object-fit .3s ease;
+      transition:transform .2s ease;
       cursor:pointer;
     }
     
     .thumb:hover{
-      transform:scale(1.8);
-      object-fit:contain;
-      z-index:10;
-      position:relative;
-      box-shadow:0 8px 25px rgba(0,0,0,.3);
+      transform:scale(1.06);
+      z-index:1;
     }
     
-    .thumb-container{
-      position:relative;
-      width:100%;
-    }
+    .thumb-container{ position:relative; width:110px; height:110px; }
     
     .click-hint{
       position:absolute;
@@ -1523,6 +1517,7 @@
     
     // Inicializar Firebase solo si está configurado
     var useFirebase = firebaseConfig.apiKey !== "TU_API_KEY_AQUI";
+    var FIREBASE_READ_ONLY = true; // evitar escrituras; las reglas están en solo-lectura
     var database = null;
     
     if(useFirebase){
@@ -1624,6 +1619,10 @@
     function saveProductos(){
       if(!useFirebase){
         console.log('ℹ️ Firebase no configurado, datos no guardados');
+        return;
+      }
+      if(FIREBASE_READ_ONLY){
+        console.log('ℹ️ Firebase en modo solo-lectura: omito guardar productos');
         return;
       }
       
