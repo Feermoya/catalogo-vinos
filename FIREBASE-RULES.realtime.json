@@ -1,0 +1,9 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": false,
+    "productos": { ".read": true },
+    "config": { ".read": true }
+  }
+}
+

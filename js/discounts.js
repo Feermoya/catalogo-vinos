@@ -12,7 +12,7 @@ var DISCOUNT_CONFIG = {
     { minBottles: 10, discount: 20, label: '10+ vinos' },
     { minBottles: 6,  discount: 18, label: '6-9 vinos' },
     { minBottles: 4,  discount: 15, label: '4-5 vinos' },
-    { minBottles: 3,  discount: 15, label: '3 vinos' },
+    { minBottles: 3,  discount: 12, label: '3 vinos' },
     { minBottles: 2,  discount: 10, label: '2 vinos' }
   ]
 };

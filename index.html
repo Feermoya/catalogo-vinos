@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self' https://www.gstatic.com https://www.googleapis.com https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'">
   <title>Tengo Vinos — Catálogo Premium | Vinos de Mendoza</title>
   <meta name="description" content="Catálogo de vinos premium de Mendoza. Encontrá el vino perfecto para cada ocasión. Envío a domicilio. Consultá por WhatsApp." />
   <meta name="keywords" content="vinos, mendoza, malbec, cabernet, vino tinto, vino blanco, vinos premium" />
@@ -256,6 +257,33 @@
       z-index:10;
       position:relative;
       box-shadow:0 8px 25px rgba(0,0,0,.3);
+    }
+    
+    .thumb-container{
+      position:relative;
+      width:100%;
+    }
+    
+    .click-hint{
+      position:absolute;
+      bottom:8px;
+      left:8px;
+      right:8px;
+      background:rgba(0,0,0,0.8);
+      color:white;
+      padding:6px 10px;
+      border-radius:6px;
+      font-size:12px;
+      text-align:center;
+      opacity:0;
+      transition:opacity .3s ease;
+      pointer-events:none;
+      font-weight:600;
+      backdrop-filter:blur(4px);
+    }
+    
+    .thumb-container:hover .click-hint{
+      opacity:1;
     }
     
     .card .body{
@@ -1288,7 +1316,7 @@
           <div style="font-weight:700; font-size:14px; margin-bottom:6px;">🎉 ¡Más vinos = Más descuentos!</div>
           <div style="font-size:12px; line-height:1.4;">
             <strong>2 vinos:</strong> 10% • 
-            <strong>3 vinos:</strong> 15% • 
+            <strong>3 vinos:</strong> 12% • 
             <strong>4-5 vinos:</strong> 15% • 
             <strong>6-9 vinos:</strong> 18% • 
             <strong>10+ vinos:</strong> 20%
@@ -1340,6 +1368,7 @@
           <h2 id="modal-wine-name"></h2>
           <div id="modal-wine-details"></div>
           <div id="modal-wine-description"></div>
+          <div id="modal-wine-actions" style="margin-top:20px; padding-top:20px; border-top:1px solid #e9ecef;"></div>
         </div>
       </div>
     </div>
@@ -1657,10 +1686,26 @@
 
     // Cargar carrito desde localStorage
     var savedCart = localStorage.getItem('cart');
-    var initialCart = savedCart ? JSON.parse(savedCart) : {};
+    var initialCart = {};
+    try{
+      initialCart = savedCart ? JSON.parse(savedCart) : {};
+      if(typeof initialCart !== 'object' || initialCart === null){ initialCart = {}; }
+    }catch(e){
+      initialCart = {};
+      localStorage.removeItem('cart');
+    }
     
     var state = { rows: PRODUCTOS.slice(), filtered: PRODUCTOS.slice(), cart: initialCart };
     function money(n){ return n.toLocaleString('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}); }
+
+    function escapeHTML(s){
+      return String(s)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;');
+    }
 
     function render(){
       var grid = document.getElementById('grid');
@@ -1688,11 +1733,11 @@
         var cardClass = r.destacado ? "card destacado" : "card";
         
         html += "<div class='"+cardClass+"'>"+
-          (r.foto? ("<img class='thumb' src='"+r.foto+"' alt='"+r.nombre+"' onclick='openImageModal(\""+r.foto+"\", \""+r.nombre+"\")'/>") : "<div class='ph'>🍷</div>")+
+          (r.foto? ("<div class='thumb-container'><img class='thumb' src='"+escapeHTML(r.foto)+"' alt='"+escapeHTML(r.nombre)+"' onclick='openImageModal(\""+escapeHTML(r.foto)+"\", \""+escapeHTML(r.nombre)+"\")'/><div class='click-hint'>👆 Toca para ver detalles</div></div>") : "<div class='ph'>🍷</div>")+
           "<div class='body'>"+
             stockStatus+
-            "<div class='name'>"+r.nombre+"</div>"+
-            (r.destacado ? "" : "<div class='meta'>"+r.bodega+" · "+r.variedad+" · "+r.ml+" ml</div>")+
+            "<div class='name'>"+escapeHTML(r.nombre)+"</div>"+
+            (r.destacado ? "" : "<div class='meta'>"+escapeHTML(r.bodega)+" · "+escapeHTML(r.variedad)+" · "+escapeHTML(r.ml)+" ml</div>")+
             (r.destacado ? "" : priceHTML)+
             (r.destacado ? "<div style='text-align:center; padding:10px; color:var(--accent); font-weight:600;'>Consultá por WhatsApp 📲</div>" : 
             "<div class='qty'>"+
@@ -1998,6 +2043,7 @@
       var modalWineName = document.getElementById('modal-wine-name');
       var modalWineDetails = document.getElementById('modal-wine-details');
       var modalWineDescription = document.getElementById('modal-wine-description');
+      var modalWineActions = document.getElementById('modal-wine-actions');
       
       // Buscar el vino en la lista
       var wine = PRODUCTOS.find(w => w.nombre === wineName);
@@ -2012,15 +2058,15 @@
           <div class="wine-details-grid">
             <div class="wine-detail-item">
               <div class="wine-detail-label">Bodega</div>
-              <div class="wine-detail-value">${wine.bodega}</div>
+              <div class="wine-detail-value">${escapeHTML(wine.bodega)}</div>
             </div>
             <div class="wine-detail-item">
               <div class="wine-detail-label">Variedad</div>
-              <div class="wine-detail-value">${wine.variedad}</div>
+              <div class="wine-detail-value">${escapeHTML(wine.variedad)}</div>
             </div>
             <div class="wine-detail-item">
               <div class="wine-detail-label">Contenido</div>
-              <div class="wine-detail-value">${wine.ml} ml</div>
+              <div class="wine-detail-value">${escapeHTML(wine.ml)} ml</div>
             </div>
             <div class="wine-detail-item">
               <div class="wine-detail-label">Precio</div>
@@ -2033,13 +2079,13 @@
         if(wine.descripcion){
           modalWineDescription.innerHTML = `
             <div class="wine-description">
-              ${wine.descripcion}
+              ${escapeHTML(wine.descripcion)}
             </div>
           `;
         } else {
           modalWineDescription.innerHTML = `
             <div class="wine-description">
-              <p>Un vino excepcional de ${wine.bodega} que representa lo mejor de la tradición vitivinícola argentina. Perfecto para acompañar tus momentos especiales.</p>
+              <p>Un vino excepcional de ${escapeHTML(wine.bodega)} que representa lo mejor de la tradición vitivinícola argentina. Perfecto para acompañar tus momentos especiales.</p>
               <p><strong>Recomendación:</strong> Ideal para maridar con carnes rojas, pastas y quesos maduros.</p>
             </div>
           `;
@@ -2047,13 +2093,43 @@
         
         // Mostrar ocasiones si existen
         if(wine.ocasiones && wine.ocasiones.length > 0){
-          var ocasionesHTML = wine.ocasiones.map(ocasion => `<span class="ocasion-tag">${ocasion}</span>`).join('');
+          var ocasionesHTML = wine.ocasiones.map(ocasion => `<span class="ocasion-tag">${escapeHTML(ocasion)}</span>`).join('');
           modalWineDescription.innerHTML += `
             <div class="wine-ocasiones">
               <h4>🍷 Perfecto para:</h4>
               <div class="ocasiones-tags">
                 ${ocasionesHTML}
               </div>
+            </div>
+          `;
+        }
+        
+        // Mostrar botón de agregar al carrito
+        if(wine && !wine.destacado){
+          var cantidadEnCarrito = state.cart[wine.id] || 0;
+          var stockDisponible = wine.stock !== undefined ? wine.stock - cantidadEnCarrito : 999;
+          var isOutOfStock = (wine.stock !== undefined && stockDisponible <= 0);
+          
+          modalWineActions.innerHTML = `
+            <div style="display:flex; gap:12px; align-items:center; justify-content:center;">
+              <button onclick="addFromModal('${wine.id}')" 
+                      style="background:linear-gradient(135deg, #25D366, #20BA5A); color:white; border:none; padding:12px 24px; border-radius:8px; font-size:16px; font-weight:600; cursor:pointer; transition:all .2s ease;"
+                      ${isOutOfStock ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
+                🛒 Agregar al Carrito
+              </button>
+              <div style="font-size:14px; color:#666;">
+                En carrito: ${cantidadEnCarrito}
+              </div>
+            </div>
+          `;
+        } else if(wine && wine.destacado){
+          modalWineActions.innerHTML = `
+            <div style="text-align:center;">
+              <a href="https://wa.me/${WHATSAPP_PHONE}?text=Hola! Me interesa el ${wine.nombre}" 
+                 target="_blank" 
+                 style="background:linear-gradient(135deg, #25D366, #20BA5A); color:white; text-decoration:none; padding:12px 24px; border-radius:8px; font-size:16px; font-weight:600; display:inline-block;">
+                📲 Consultar por WhatsApp
+              </a>
             </div>
           `;
         }
@@ -2067,6 +2143,12 @@
       var imageModal = document.getElementById('image-modal');
       imageModal.style.display = 'none';
       document.body.style.overflow = 'auto';
+    }
+    
+    // Función para agregar vino desde el modal y cerrarlo
+    function addFromModal(productId){
+      add(productId);
+      closeImageModal();
     }
     
     // Event listeners para modal de imagen
