@@ -1325,6 +1325,7 @@
       <div><strong id="cart-total">$0</strong> <span id="cart-items">(0)</span></div>
       <div>
         <button id="admin-panel" class="admin-btn" style="display:none;">⚙️ Admin</button>
+        <button id="save-firebase" class="admin-btn" style="display:none;">⬆️ Guardar en Firebase</button>
         <button id="add-wine" class="add-wine-btn" style="display:none;">+ Agregar Vino</button>
         <button id="clear" disabled>Vaciar</button>
         <button class="whatsapp-btn" id="view-cart" disabled onclick="openCartModal()">🛒 Ver Carrito</button>
@@ -1517,7 +1518,10 @@
     
     // Inicializar Firebase solo si está configurado
     var useFirebase = firebaseConfig.apiKey !== "TU_API_KEY_AQUI";
-    var FIREBASE_READ_ONLY = true; // evitar escrituras; las reglas están en solo-lectura
+    // Escritura habilitada en local; solo-lectura en producción
+    var FIREBASE_READ_ONLY = !isLocalEnvironment();
+    // Evitar sincronización automática silenciosa; sólo escribir cuando el usuario edita
+    window.AUTO_SYNC_TO_FIREBASE = false;
     var database = null;
     
     if(useFirebase){
@@ -1637,6 +1641,10 @@
         return limpio;
       });
       
+      if(window.AUTO_SYNC_TO_FIREBASE === false){
+        console.log('ℹ️ Auto-sync desactivado: no se guarda en Firebase hasta que el usuario confirme');
+        return;
+      }
       database.ref('productos').set(productosLimpios).then(function(){
         console.log('✅ Productos guardados en Firebase');
       }).catch(function(e){
@@ -2203,6 +2211,24 @@
              window.location.protocol === 'file:';
     }
 
+    // Mostrar botón Guardar en Firebase sólo en local
+    (function(){
+      if(isLocalEnvironment()){
+        var btn = document.getElementById('save-firebase');
+        if(btn){ btn.style.display = 'inline-block'; }
+        btn && btn.addEventListener('click', function(){ saveToFirebaseNow(); });
+      }
+    })();
+
+    function saveToFirebaseNow(){
+      try{
+        window.AUTO_SYNC_TO_FIREBASE = true;
+        saveProductos();
+      } finally {
+        window.AUTO_SYNC_TO_FIREBASE = false;
+      }
+    }
+
     // Mostrar botones de administración solo en local
     if(isLocalEnvironment()){
       document.getElementById('admin-panel').style.display = 'inline-block';
@@ -2314,7 +2340,7 @@
         if(index > -1){
           PRODUCTOS.splice(index, 1);
           
-          // Guardar en LocalStorage
+          // Guardar en LocalStorage (no auto-sync)
           saveProductos();
           
           state.rows = PRODUCTOS.slice();
@@ -2455,10 +2481,25 @@
       var nombre = document.getElementById('wine-name').value.trim();
       var bodega = document.getElementById('wine-bodega').value.trim();
       var variedad = document.getElementById('wine-variedad').value.trim();
-      var ml = parseInt(document.getElementById('wine-ml').value);
-      var precio = parseInt(document.getElementById('wine-precio').value);
+      var mlRaw = document.getElementById('wine-ml').value.trim();
+      var precioRaw = document.getElementById('wine-precio').value.trim();
       var precioAnterior = document.getElementById('wine-precio-anterior').value.trim();
-      var stock = parseInt(document.getElementById('wine-stock').value) || 0;
+      var stockRaw = document.getElementById('wine-stock').value.trim();
+      
+      // Buscar valores actuales como fallback si estamos editando
+      var currentObj = null;
+      if(window.editingWineId){
+        var idxCurrent = PRODUCTOS.findIndex(w => w.id == window.editingWineId);
+        if(idxCurrent > -1) currentObj = PRODUCTOS[idxCurrent];
+      }
+      
+      function toIntSafe(raw, fallback){
+        var n = parseInt(raw, 10);
+        return Number.isFinite(n) ? n : fallback;
+      }
+      var ml = toIntSafe(mlRaw, currentObj ? currentObj.ml : 750);
+      var precio = toIntSafe(precioRaw, currentObj ? currentObj.precio : 0);
+      var stock = toIntSafe(stockRaw, currentObj ? (currentObj.stock || 0) : 0);
       var foto = document.getElementById('wine-foto').value.trim();
 
       // Validar campos requeridos
@@ -2491,7 +2532,8 @@
           
           // Agregar precio anterior solo si tiene valor
           if(precioAnterior && precioAnterior !== ''){
-            vinoEditado.precioAnterior = parseInt(precioAnterior);
+            var pa = parseInt(precioAnterior, 10);
+            if(Number.isFinite(pa)) vinoEditado.precioAnterior = pa;
           }
           
           PRODUCTOS[wineIndex] = vinoEditado;
@@ -2527,7 +2569,7 @@
           nombre: nombre,
           bodega: bodega,
           variedad: variedad,
-          ml: ml,
+          ml: ml || 750,
           precio: precio,
           foto: foto,
           stock: stock
@@ -2535,7 +2577,8 @@
         
         // Agregar precio anterior solo si tiene valor
         if(precioAnterior && precioAnterior !== ''){
-          nuevoVino.precioAnterior = parseInt(precioAnterior);
+          var pan = parseInt(precioAnterior, 10);
+          if(Number.isFinite(pan)) nuevoVino.precioAnterior = pan;
         }
 
         // Agregar a la lista
