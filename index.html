@@ -1306,7 +1306,7 @@
             <option value="name-asc">Nombre A→Z</option>
             <option value="name-desc">Nombre Z→A</option>
             <option value="price-asc">Precio ↑</option>
-            <option value="price-desc">Precio ↓</option>
+            <option value="price-desc" selected>Precio ↓</option>
           </select>
         </div>
       </div>
@@ -1653,58 +1653,18 @@
         }
         
         if(productosArray && productosArray.length > 0){
-          console.log('ℹ️ Combinando datos. locales=', PRODUCTOS.length, 'firebase=', productosArray.length);
-          
-          // Crear mapa de productos locales por ID para búsqueda rápida
-          var productosLocalesMap = {};
-          PRODUCTOS.forEach(function(p){ productosLocalesMap[p.id] = p; });
-          // IDs locales y Firebase (resumen)
-          var idsFirebase = productosArray.map(function(p){ return p ? p.id : null; }).filter(function(id){ return id !== null; });
-          console.log('ℹ️ IDs locales:', Object.keys(productosLocalesMap));
-          console.log('ℹ️ IDs Firebase:', idsFirebase);
-          
-          // Fusionar productos existentes en código local
-          var productosCombinados = PRODUCTOS.map(function(localProduct){
-            var firebaseProduct = productosArray.find(function(fp){ return fp && fp.id === localProduct.id; });
-            if(firebaseProduct){
-              return {
-                ...localProduct, // Base: código local (nombres, descripciones, ocasiones)
-                foto: localProduct.foto || firebaseProduct.foto, // PRIORIDAD A CÓDIGO LOCAL (para actualizar fotos)
-                stock: firebaseProduct.stock !== undefined ? firebaseProduct.stock : localProduct.stock,
-                precio: firebaseProduct.precio || localProduct.precio,
-                precioAnterior: firebaseProduct.precioAnterior !== undefined ? firebaseProduct.precioAnterior : localProduct.precioAnterior,
-                descripcion: localProduct.descripcion || firebaseProduct.descripcion, // Combinar descripciones
-                ocasiones: localProduct.ocasiones || firebaseProduct.ocasiones // Combinar ocasiones
-              };
+          // MODO SOLO-FIREBASE: usar únicamente los productos de Firebase
+          // Normalizar descripciones si vinieron como texto plano
+          for(var i=0;i<productosArray.length;i++){
+            var p = productosArray[i];
+            if(p && typeof p.descripcion === 'string' && !p.descripcion.includes('<p>') && p.descripcion.includes('\n')){
+              p.descripcion = '<p>' + p.descripcion.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
             }
-            return localProduct; // Si no está en Firebase, usar local
-          });
-          
-          // Agregar productos de Firebase que no están en código local
-          var nuevosProductos = [];
-          productosArray.forEach(function(firebaseProduct){
-            if(firebaseProduct && firebaseProduct.id && !productosLocalesMap[firebaseProduct.id]){
-              // Producto nuevo de Firebase que no existe en código local
-              console.log('➕ Nuevo desde Firebase:', firebaseProduct.nombre, 'ID:', firebaseProduct.id);
-              
-              // Arreglar descripción si es texto plano (con \n) convertirlo a HTML
-              if(firebaseProduct.descripcion && typeof firebaseProduct.descripcion === 'string'){
-                // Si la descripción no tiene tags HTML pero tiene saltos de línea
-                if(!firebaseProduct.descripcion.includes('<p>') && firebaseProduct.descripcion.includes('\n')){
-              console.log('🔧 Normalizando descripción (texto plano → HTML)');
-                  firebaseProduct.descripcion = '<p>' + firebaseProduct.descripcion.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
-                }
-              }
-              
-              // Detalle omitido para mantener logs limpios
-              productosCombinados.push(firebaseProduct);
-              nuevosProductos.push(firebaseProduct.id);
-            }
-          });
-          
-          console.log('✅ Total combinados:', productosCombinados.length, '| nuevos desde Firebase:', nuevosProductos);
-          
-          callback(productosCombinados);
+          }
+          // Orden por precio DESC por defecto
+          productosArray.sort(function(a,b){ return (b && b.precio ? b.precio : 0) - (a && a.precio ? a.precio : 0); });
+          console.log('✅ Total Firebase (solo):', productosArray.length);
+          callback(productosArray);
         } else {
           console.warn('⚠️ Firebase vacío o sin datos válidos. length=', productosArray ? productosArray.length : 'null');
           saveProductos();
@@ -1809,6 +1769,30 @@
         .replace(/>/g,'&gt;')
         .replace(/"/g,'&quot;')
         .replace(/'/g,'&#39;');
+    }
+
+    // Sanitiza HTML permitiendo solo un subconjunto seguro de etiquetas
+    function sanitizeHTML(html){
+      if(typeof html !== 'string') return '';
+      // Eliminar tags peligrosos completos
+      var cleaned = html.replace(/<\/(?:script|style)[^>]*>/gi,'')
+                        .replace(/<(?:script|style)[^>]*>[\s\S]*?<\/(?:script|style)>/gi,'');
+      // Quitar atributos on* y javascript:
+      cleaned = cleaned.replace(/ on[a-z]+\s*=\s*"[^"]*"/gi,'')
+                       .replace(/ on[a-z]+\s*=\s*'[^']*'/gi,'')
+                       .replace(/ on[a-z]+\s*=\s*[^\s>]+/gi,'')
+                       .replace(/javascript:/gi,'');
+      // Permitir solo este whitelist de etiquetas
+      var allowed = new Set(['p','strong','b','em','i','br','ul','ol','li','span']);
+      cleaned = cleaned.replace(/<\/?([a-z0-9]+)(?:\s[^>]*)?>/gi, function(match, tag){
+        tag = tag.toLowerCase();
+        if(allowed.has(tag)){
+          // Dejar solo etiqueta sin atributos para mayor seguridad
+          return match.startsWith('</') ? `</${tag}>` : `<${tag}>`;
+        }
+        return '';
+      });
+      return cleaned;
     }
 
     function render(){
@@ -2219,9 +2203,7 @@
         // Mostrar descripción si existe
         if(wine.descripcion){
           modalWineDescription.innerHTML = `
-            <div class="wine-description">
-              ${escapeHTML(wine.descripcion)}
-            </div>
+            <div class="wine-description">${sanitizeHTML(wine.descripcion)}</div>
           `;
         } else {
           modalWineDescription.innerHTML = `
