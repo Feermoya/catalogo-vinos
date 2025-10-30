@@ -2327,6 +2327,17 @@
              window.location.protocol === 'file:';
     }
 
+    // Silenciar logs en producción (mantener solo errores del navegador)
+    (function(){
+      try{
+        if(!isLocalEnvironment()){
+          console.log = function(){};
+          console.info = function(){};
+          console.warn = function(){};
+        }
+      }catch(_){}
+    })();
+
     // Mostrar botón Guardar en Firebase sólo en local
     (function(){
       if(isLocalEnvironment()){
