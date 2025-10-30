@@ -1544,6 +1544,20 @@
   </div>
 
   <script>
+    // Silenciar logs inmediatamente en producción
+    (function(){
+      try{
+        var isLocal = (window.location.hostname === 'localhost' ||
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '0.0.0.0' ||
+                       window.location.protocol === 'file:');
+        if(!isLocal){
+          console.log = function(){};
+          console.info = function(){};
+          console.warn = function(){};
+        }
+      }catch(_){}
+    })();
     // ===== CONFIGURACIÓN DE FIREBASE =====
     // IMPORTANTE: Reemplaza esto con tu propia configuración de Firebase
     // Ve a: https://console.firebase.google.com/
