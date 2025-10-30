@@ -785,7 +785,8 @@
     }
     
     .form-group input,
-    .form-group select{
+    .form-group select,
+    .form-group textarea{
       width:100%;
       padding:12px;
       border:2px solid #e0e0e0;
@@ -795,11 +796,23 @@
       transition:border-color .15s ease, box-shadow .15s ease;
     }
     
+    .form-group textarea{
+      resize:vertical;
+      min-height:80px;
+    }
+    
     .form-group input:focus,
-    .form-group select:focus{
+    .form-group select:focus,
+    .form-group textarea:focus{
       outline:none;
       border-color:var(--accent);
       box-shadow:0 0 0 3px rgba(107,43,43,.1);
+    }
+    
+    .wine-ocasion-checkbox{
+      width:18px;
+      height:18px;
+      cursor:pointer;
     }
     
     .form-group small{
@@ -1494,6 +1507,34 @@
           <small>Pega aquí la URL de la imagen del vino</small>
         </div>
         
+        <div class="form-group">
+          <label for="wine-descripcion">Descripción del Vino (opcional)</label>
+          <textarea id="wine-descripcion" rows="4" placeholder="Ej: &lt;p&gt;&lt;strong&gt;Vino elegante&lt;/strong&gt; con notas frutales...&lt;/p&gt;"></textarea>
+          <small class="help-text">Puedes usar HTML básico. Ejemplo: &lt;p&gt;&lt;strong&gt;Texto en negrita&lt;/strong&gt;&lt;/p&gt;</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="wine-ocasiones">Ocasiones (opcional)</label>
+          <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; margin-top:8px;">
+            <label style="display:flex; align-items:center; gap:6px; font-weight:normal;">
+              <input type="checkbox" value="Cena especial" class="wine-ocasion-checkbox"> 💕 Cena especial
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; font-weight:normal;">
+              <input type="checkbox" value="Asado" class="wine-ocasion-checkbox"> 🥩 Asado
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; font-weight:normal;">
+              <input type="checkbox" value="Almuerzo" class="wine-ocasion-checkbox"> 🍽️ Almuerzo
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; font-weight:normal;">
+              <input type="checkbox" value="Aperitivo" class="wine-ocasion-checkbox"> 🥂 Aperitivo
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; font-weight:normal;">
+              <input type="checkbox" value="Regalo" class="wine-ocasion-checkbox"> 🎁 Regalo
+            </label>
+          </div>
+          <small class="help-text">Selecciona las ocasiones para las que es ideal este vino</small>
+        </div>
+        
         <div class="modal-actions">
           <button type="button" class="btn-cancel" id="cancel-wine">Cancelar</button>
           <button type="submit" class="btn-save">💾 Guardar Vino</button>
@@ -1588,33 +1629,89 @@
       }
       
       // COMBINAR: Firebase + Código Local (mejor de ambos)
+      console.log('ℹ️ Cargando productos desde Firebase...');
       database.ref('productos').once('value').then(function(snapshot){
         var data = snapshot.val();
-        if(data && Array.isArray(data) && data.length > 0){
-          console.log('✅ Combinando datos de Firebase + Código Local');
-          // Fusionar inteligentemente
+        
+        // Resumen de datos recibidos
+        console.log('ℹ️ Tipo de datos recibidos:', Array.isArray(data) ? 'array' : (data ? 'objeto' : 'null'));
+        
+        // Firebase puede devolver un objeto en lugar de array
+        var productosArray = [];
+        if(Array.isArray(data)){
+          productosArray = data;
+          console.log('ℹ️ Firebase devolvió array con', productosArray.length, 'elementos');
+        } else if(data && typeof data === 'object'){
+          // Convertir objeto a array
+          console.log('ℹ️ Firebase devolvió objeto, convirtiendo a array...');
+          for(var key in data){
+            if(data.hasOwnProperty(key) && data[key] && typeof data[key] === 'object'){
+              productosArray.push(data[key]);
+            }
+          }
+          console.log('ℹ️ Convertido a array con', productosArray.length, 'elementos');
+        }
+        
+        if(productosArray && productosArray.length > 0){
+          console.log('ℹ️ Combinando datos. locales=', PRODUCTOS.length, 'firebase=', productosArray.length);
+          
+          // Crear mapa de productos locales por ID para búsqueda rápida
+          var productosLocalesMap = {};
+          PRODUCTOS.forEach(function(p){ productosLocalesMap[p.id] = p; });
+          // IDs locales y Firebase (resumen)
+          var idsFirebase = productosArray.map(function(p){ return p ? p.id : null; }).filter(function(id){ return id !== null; });
+          console.log('ℹ️ IDs locales:', Object.keys(productosLocalesMap));
+          console.log('ℹ️ IDs Firebase:', idsFirebase);
+          
+          // Fusionar productos existentes en código local
           var productosCombinados = PRODUCTOS.map(function(localProduct){
-            var firebaseProduct = data.find(function(fp){ return fp && fp.id === localProduct.id; });
+            var firebaseProduct = productosArray.find(function(fp){ return fp && fp.id === localProduct.id; });
             if(firebaseProduct){
               return {
                 ...localProduct, // Base: código local (nombres, descripciones, ocasiones)
                 foto: localProduct.foto || firebaseProduct.foto, // PRIORIDAD A CÓDIGO LOCAL (para actualizar fotos)
                 stock: firebaseProduct.stock !== undefined ? firebaseProduct.stock : localProduct.stock,
                 precio: firebaseProduct.precio || localProduct.precio,
-                precioAnterior: firebaseProduct.precioAnterior || localProduct.precioAnterior
+                precioAnterior: firebaseProduct.precioAnterior !== undefined ? firebaseProduct.precioAnterior : localProduct.precioAnterior,
+                descripcion: localProduct.descripcion || firebaseProduct.descripcion, // Combinar descripciones
+                ocasiones: localProduct.ocasiones || firebaseProduct.ocasiones // Combinar ocasiones
               };
             }
             return localProduct; // Si no está en Firebase, usar local
           });
           
+          // Agregar productos de Firebase que no están en código local
+          var nuevosProductos = [];
+          productosArray.forEach(function(firebaseProduct){
+            if(firebaseProduct && firebaseProduct.id && !productosLocalesMap[firebaseProduct.id]){
+              // Producto nuevo de Firebase que no existe en código local
+              console.log('➕ Nuevo desde Firebase:', firebaseProduct.nombre, 'ID:', firebaseProduct.id);
+              
+              // Arreglar descripción si es texto plano (con \n) convertirlo a HTML
+              if(firebaseProduct.descripcion && typeof firebaseProduct.descripcion === 'string'){
+                // Si la descripción no tiene tags HTML pero tiene saltos de línea
+                if(!firebaseProduct.descripcion.includes('<p>') && firebaseProduct.descripcion.includes('\n')){
+              console.log('🔧 Normalizando descripción (texto plano → HTML)');
+                  firebaseProduct.descripcion = '<p>' + firebaseProduct.descripcion.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
+                }
+              }
+              
+              // Detalle omitido para mantener logs limpios
+              productosCombinados.push(firebaseProduct);
+              nuevosProductos.push(firebaseProduct.id);
+            }
+          });
+          
+          console.log('✅ Total combinados:', productosCombinados.length, '| nuevos desde Firebase:', nuevosProductos);
+          
           callback(productosCombinados);
         } else {
-          console.log('⚠️ Firebase vacío, guardando datos locales');
+          console.warn('⚠️ Firebase vacío o sin datos válidos. length=', productosArray ? productosArray.length : 'null');
           saveProductos();
           callback(PRODUCTOS);
         }
       }).catch(function(e){
-        console.warn('⚠️ Error al cargar desde Firebase:', e.message);
+        console.error('❌ Error al cargar desde Firebase:', e.message);
         callback(PRODUCTOS);
       });
     }
@@ -1715,10 +1812,24 @@
     }
 
     function render(){
+      // Resumen mínimo de render
+      console.log('ℹ️ Render. items=', state.filtered.length);
+      
       var grid = document.getElementById('grid');
+      if(!grid){
+        console.error('❌ No se encontró #grid');
+        return;
+      }
+      
       var html = '';
       for(var i=0;i<state.filtered.length;i++){
         var r = state.filtered[i];
+        
+        // Log para productos específicos
+        // Log solo si es Cavagnaro (para verificar presencia)
+        if(r.nombre && r.nombre.toLowerCase().includes('cavagnaro')){
+          console.log('✅ Cavagnaro presente en render (ID=', r.id, ')');
+        }
         // Verificar stock considerando lo que ya está en el carrito
         var cantidadEnCarrito = state.cart[r.id] || 0;
         var stockDisponible = r.stock !== undefined ? r.stock - cantidadEnCarrito : 999;
@@ -1756,6 +1867,19 @@
         "</div>";
       }
       grid.innerHTML = html;
+      console.log('✅ Render completado');
+      
+      // Verificar si el HTML contiene el vino Cavagnaro
+      if(!html.toLowerCase().includes('cavagnaro')){
+        console.warn('⚠️ Cavagnaro NO aparece en el HTML generado');
+      }
+      
+      // Verificar que el grid tenga contenido
+      var gridElement = document.getElementById('grid');
+      if(!(gridElement && gridElement.children.length > 0)){
+        console.error('❌ Grid vacío o no encontrado');
+      }
+      
       renderCart();
     }
 
@@ -2005,16 +2129,26 @@
     function applyFilters(){
       var order = document.getElementById('order').value;
       var ocasion = document.getElementById('ocasion').value;
+      console.log('ℹ️ Filtros. orden=', order, 'ocasion=', ocasion || 'todas');
       var arr = [];
       for(var i=0;i<state.rows.length;i++){
         var r = state.rows[i];
         var matchesOcasion = !ocasion || (r.ocasiones && r.ocasiones.includes(ocasion));
         
-        if(matchesOcasion) arr.push(r);
+        if(matchesOcasion){
+          arr.push(r);
+        }
       }
       if(order==='name-asc') arr.sort(function(a,b){ return a.nombre.localeCompare(b.nombre); });
       if(order==='price-asc') arr.sort(function(a,b){ return a.precio-b.precio; });
       if(order==='price-desc') arr.sort(function(a,b){ return b.precio-a.precio; });
+      
+      console.log('ℹ️ Filtrados:', arr.length);
+      var cavagnaroFiltered = arr.find(function(p){ return p.nombre && p.nombre.toLowerCase().includes('cavagnaro'); });
+      if(!cavagnaroFiltered){
+        console.warn('⚠️ Cavagnaro NO pasa los filtros');
+      }
+      
       state.filtered = arr; render();
     }
 
@@ -2321,6 +2455,14 @@
       document.getElementById('wine-precio-anterior').value = wine.precioAnterior || '';
       document.getElementById('wine-stock').value = wine.stock !== undefined ? wine.stock : 10;
       document.getElementById('wine-foto').value = wine.foto || '';
+      document.getElementById('wine-descripcion').value = wine.descripcion || '';
+      
+      // Cargar ocasiones seleccionadas
+      var checkboxes = document.querySelectorAll('.wine-ocasion-checkbox');
+      for(var i = 0; i < checkboxes.length; i++){
+        var checkbox = checkboxes[i];
+        checkbox.checked = wine.ocasiones && wine.ocasiones.includes(checkbox.value);
+      }
       
       // Cambiar título del modal
       document.querySelector('#wine-modal .modal-header h2').textContent = '✏️ Editar Vino';
@@ -2354,6 +2496,12 @@
     function openAddWineModal(){
       // Limpiar formulario
       document.getElementById('wine-form').reset();
+      
+      // Limpiar checkboxes de ocasiones
+      var checkboxes = document.querySelectorAll('.wine-ocasion-checkbox');
+      for(var i = 0; i < checkboxes.length; i++){
+        checkboxes[i].checked = false;
+      }
       
       // Cambiar título del modal
       document.querySelector('#wine-modal .modal-header h2').textContent = '🍷 Agregar Nuevo Vino';
@@ -2501,6 +2649,16 @@
       var precio = toIntSafe(precioRaw, currentObj ? currentObj.precio : 0);
       var stock = toIntSafe(stockRaw, currentObj ? (currentObj.stock || 0) : 0);
       var foto = document.getElementById('wine-foto').value.trim();
+      
+      // Obtener descripción
+      var descripcion = document.getElementById('wine-descripcion').value.trim();
+      
+      // Obtener ocasiones seleccionadas
+      var ocasionesSeleccionadas = [];
+      var checkboxes = document.querySelectorAll('.wine-ocasion-checkbox:checked');
+      for(var i = 0; i < checkboxes.length; i++){
+        ocasionesSeleccionadas.push(checkboxes[i].value);
+      }
 
       // Validar campos requeridos
       if(!nombre || !bodega || !variedad || !precio){
@@ -2536,6 +2694,16 @@
             if(Number.isFinite(pa)) vinoEditado.precioAnterior = pa;
           }
           
+          // Agregar descripción si tiene valor
+          if(descripcion && descripcion !== ''){
+            vinoEditado.descripcion = descripcion;
+          }
+          
+          // Agregar ocasiones si tiene seleccionadas
+          if(ocasionesSeleccionadas.length > 0){
+            vinoEditado.ocasiones = ocasionesSeleccionadas;
+          }
+          
           PRODUCTOS[wineIndex] = vinoEditado;
           
           // Guardar en LocalStorage
@@ -2561,7 +2729,16 @@
       } else {
         // AGREGAR NUEVO VINO
         console.log('Agregando nuevo vino');
-        var newId = (PRODUCTOS.length + 1).toString();
+        
+        // Calcular el siguiente ID disponible (máximo ID + 1)
+        var maxId = 0;
+        for(var i = 0; i < PRODUCTOS.length; i++){
+          var currentId = parseInt(PRODUCTOS[i].id, 10);
+          if(!isNaN(currentId) && currentId > maxId){
+            maxId = currentId;
+          }
+        }
+        var newId = (maxId + 1).toString();
 
         // Crear nuevo vino
         var nuevoVino = {
@@ -2579,6 +2756,16 @@
         if(precioAnterior && precioAnterior !== ''){
           var pan = parseInt(precioAnterior, 10);
           if(Number.isFinite(pan)) nuevoVino.precioAnterior = pan;
+        }
+        
+        // Agregar descripción si tiene valor
+        if(descripcion && descripcion !== ''){
+          nuevoVino.descripcion = descripcion;
+        }
+        
+        // Agregar ocasiones si tiene seleccionadas
+        if(ocasionesSeleccionadas.length > 0){
+          nuevoVino.ocasiones = ocasionesSeleccionadas;
         }
 
         // Agregar a la lista
@@ -2650,8 +2837,21 @@
 
     // ===== INICIALIZACIÓN =====
     // Cargar productos y configuración al iniciar
+    console.log('ℹ️ App iniciada. useFirebase=', useFirebase, 'productosIniciales=', PRODUCTOS.length);
+    
     loadProductos(function(productos){
+      console.log('ℹ️ Productos cargados:', productos.length);
+      
       PRODUCTOS = productos;
+      console.log('ℹ️ Lista actualizada. total=', PRODUCTOS.length);
+      
+      // Verificar si el vino Cavagnaro está en la lista
+      var cavagnaro = PRODUCTOS.find(function(p){ return p.nombre && p.nombre.toLowerCase().includes('cavagnaro'); });
+      if(cavagnaro){
+        console.log('✅ Cavagnaro está en la lista (ID=', cavagnaro.id, ')');
+      } else {
+        console.warn('⚠️ Cavagnaro NO está en la lista');
+      }
       
       // Sincronizar fotos nuevas del código a Firebase
       if(useFirebase){
@@ -2663,6 +2863,7 @@
       
       state.rows = PRODUCTOS.slice();
       state.filtered = PRODUCTOS.slice();
+      console.log('ℹ️ Estado listo. rows=', state.rows.length, 'filtered=', state.filtered.length);
       
       // RECARGAR CARRITO DESDE LOCALSTORAGE DESPUÉS DE LOADPRODUCTOS
       var savedCart = localStorage.getItem('cart');
@@ -2671,7 +2872,9 @@
       }
       
       // Renderizar con el carrito recargado
+      console.log('ℹ️ Render inicial...');
       render();
+      console.log('✅ Render OK');
       
       // Cargar configuración después de renderizar
       loadConfig();
